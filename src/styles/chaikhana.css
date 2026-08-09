@@ -1,4 +1,4 @@
-/* Iraqi Chaikhana (شايخانة) Design System & Styling */
+/* Iraqi Chaikhana (شايخانة) Design System & Centered Styling */
 
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Outfit:wght@400;600;700&display=swap');
 
@@ -27,13 +27,18 @@
   -webkit-user-select: none;
 }
 
-body {
-  font-family: var(--arabic-font);
+html, body, #root {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
   background-color: var(--wood-dark);
   color: #f1f1f1;
-  overflow: hidden;
-  height: 100vh;
-  width: 100vw;
+  font-family: var(--arabic-font);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .chaikhana-app {
@@ -41,17 +46,21 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   background: 
-    radial-gradient(circle at 50% 30%, rgba(229, 184, 66, 0.1), transparent 70%),
+    radial-gradient(circle at 50% 30%, rgba(229, 184, 66, 0.12), transparent 70%),
     radial-gradient(circle at 50% 50%, var(--wood-medium) 0%, var(--wood-dark) 100%);
   position: relative;
   overflow: hidden;
 }
 
-/* Oriental Wood Table Frame */
+/* Oriental Wood Table Frame - Centered and Full Screen */
 .chaikhana-table-container {
-  flex: 1;
-  position: relative;
+  width: calc(100vw - 24px);
+  height: calc(100vh - 24px);
+  max-width: 100vw;
+  max-height: 100vh;
   margin: 12px;
   border-radius: 24px;
   border: 10px solid var(--wood-border);
@@ -65,6 +74,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  position: relative;
   overflow: hidden;
 }
 
@@ -92,6 +102,7 @@ body {
   backdrop-filter: blur(10px);
   border-bottom: 2px solid var(--wood-border);
   z-index: 10;
+  width: 100%;
 }
 
 .brand-title {
@@ -143,7 +154,7 @@ body {
   justify-content: center;
   width: 100%;
   height: 100%;
-  padding: 30px;
+  padding: 20px;
   overflow: auto;
 }
 
@@ -155,7 +166,8 @@ body {
   justify-content: center;
   align-content: center;
   gap: 6px;
-  max-width: 92%;
+  width: 100%;
+  max-width: 90%;
   max-height: 85%;
   position: relative;
   margin: auto;
@@ -168,7 +180,7 @@ body {
   width: 80px;
   height: 80px;
   pointer-events: none;
-  opacity: 0.3;
+  opacity: 0.35;
   background-image: radial-gradient(circle, var(--gold-accent) 2px, transparent 2px);
   background-size: 10px 10px;
   border: 2px solid var(--gold-accent);
@@ -217,6 +229,7 @@ body {
   box-shadow: 0 10px 30px rgba(0,0,0,0.6);
   z-index: 5;
   transition: all 0.2s ease;
+  margin: auto;
 }
 
 .board-area.drag-active .empty-board-box {
@@ -517,6 +530,7 @@ body {
   align-items: center;
   gap: 8px;
   z-index: 10;
+  width: 100%;
 }
 
 .hand-tiles-wrapper {
@@ -591,7 +605,7 @@ body {
 /* Bot Speech Banner */
 .bot-banner {
   position: absolute;
-  top: 70px;
+  top: 75px;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(255, 255, 255, 0.95);
