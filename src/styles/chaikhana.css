@@ -1,0 +1,654 @@
+/* Iraqi Chaikhana (شايخانة) Design System & Styling */
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Outfit:wght@400;600;700&display=swap');
+
+:root {
+  --wood-dark: #1b0f0b;
+  --wood-medium: #361b11;
+  --wood-light: #4e291b;
+  --wood-border: #6d3925;
+  --gold-accent: #e5b842;
+  --gold-glow: rgba(229, 184, 66, 0.4);
+  --tea-amber: #c85012;
+  --tea-dark: #7a2300;
+  --tile-bg: #fcfbf5;
+  --tile-shadow: rgba(0, 0, 0, 0.5);
+  --pip-color: #1a1a1a;
+  --brass-pin: #d4af37;
+  --arabic-font: 'Cairo', 'Tajawal', sans-serif;
+  --english-font: 'Outfit', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  font-family: var(--arabic-font);
+  background-color: var(--wood-dark);
+  color: #f1f1f1;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+.chaikhana-app {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: 
+    radial-gradient(circle at 50% 30%, rgba(229, 184, 66, 0.08), transparent 70%),
+    radial-gradient(circle at 50% 50%, var(--wood-medium) 0%, var(--wood-dark) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Oriental Wood Table Frame */
+.chaikhana-table-container {
+  flex: 1;
+  position: relative;
+  margin: 12px;
+  border-radius: 20px;
+  border: 8px solid var(--wood-border);
+  box-shadow: 
+    inset 0 0 40px rgba(0, 0, 0, 0.8),
+    0 10px 30px rgba(0, 0, 0, 0.7);
+  background: 
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 4px),
+    linear-gradient(135deg, #2c160e 0%, #1a0b06 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+/* Oriental Pattern Border Trim */
+.chaikhana-table-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px dashed rgba(229, 184, 66, 0.25);
+  border-radius: 12px;
+  pointer-events: none;
+  margin: 4px;
+}
+
+/* Header Bar */
+.chaikhana-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background: rgba(27, 15, 11, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 2px solid var(--wood-border);
+  z-index: 10;
+}
+
+.brand-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--gold-accent);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+/* Action Controls Header */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.icon-btn {
+  background: rgba(78, 41, 27, 0.6);
+  border: 1px solid var(--gold-accent);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.icon-btn:hover {
+  background: var(--gold-accent);
+  color: var(--wood-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--gold-glow);
+}
+
+/* Domino Board Area */
+.board-area {
+  flex: 1;
+  position: relative;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.snake-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  max-width: 90%;
+  max-height: 85%;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* Handcrafted Ivory Domino Tile */
+.domino-tile {
+  width: 44px;
+  height: 88px;
+  background: linear-gradient(145deg, #ffffff 0%, #f4f0e6 100%);
+  border-radius: 6px;
+  border: 1px solid #d4ceb8;
+  box-shadow: 
+    0 4px 10px var(--tile-shadow),
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin: 2px;
+  flex-shrink: 0;
+}
+
+.domino-tile.horizontal {
+  width: 88px;
+  height: 44px;
+  flex-direction: row;
+}
+
+.domino-tile.playable {
+  box-shadow: 
+    0 0 16px var(--gold-accent),
+    0 4px 10px var(--tile-shadow);
+  border-color: var(--gold-accent);
+  transform: translateY(-6px);
+  animation: pulseGlow 1.5s infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 8px var(--gold-accent); }
+  100% { box-shadow: 0 0 20px var(--gold-accent), 0 0 30px var(--gold-accent); }
+}
+
+.domino-tile:hover:not(.disabled) {
+  transform: translateY(-8px) scale(1.05);
+  z-index: 20;
+}
+
+/* Center Divider Line & Brass Pin (زر النحاس) */
+.tile-divider-vertical {
+  width: 100%;
+  height: 2px;
+  background: #c5bfa8;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.2);
+}
+
+.tile-divider-horizontal {
+  height: 100%;
+  width: 2px;
+  background: #c5bfa8;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.2);
+}
+
+.brass-pin {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fff 0%, var(--brass-pin) 70%, #997a15 100%);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+/* Tile Half & Pips Layout */
+.tile-half {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 4px;
+  align-items: center;
+  justify-items: center;
+  position: relative;
+}
+
+.pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #444 0%, var(--pip-color) 70%);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.8);
+}
+
+/* Pip Grid Positioning */
+.pip-top-left { grid-area: 1 / 1; }
+.pip-top-right { grid-area: 1 / 3; }
+.pip-mid-left { grid-area: 2 / 1; }
+.pip-center { grid-area: 2 / 2; }
+.pip-mid-right { grid-area: 2 / 3; }
+.pip-bottom-left { grid-area: 3 / 1; }
+.pip-bottom-right { grid-area: 3 / 3; }
+
+/* End Placement Drop Target Buttons */
+.drop-target-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(229, 184, 66, 0.2);
+  border: 2px dashed var(--gold-accent);
+  color: var(--gold-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  animation: bouncePulse 1s infinite alternate;
+}
+
+.drop-target-btn:hover {
+  background: var(--gold-accent);
+  color: var(--wood-dark);
+  transform: scale(1.15);
+}
+
+@keyframes bouncePulse {
+  0% { transform: scale(0.95); }
+  100% { transform: scale(1.08); }
+}
+
+/* Istikan Iraqi Tea Component */
+.istikan-container {
+  position: absolute;
+  bottom: 110px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  z-index: 15;
+  transition: transform 0.2s ease;
+}
+
+.istikan-container:hover {
+  transform: scale(1.08) rotate(3deg);
+}
+
+.istikan-glass {
+  width: 44px;
+  height: 64px;
+  position: relative;
+  background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 40%, rgba(200, 80, 18, 0.85) 41%, var(--tea-dark) 100%);
+  border-radius: 8px 8px 16px 16px;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 
+    0 8px 16px rgba(0,0,0,0.6),
+    inset 0 0 8px rgba(255,255,255,0.3);
+  overflow: visible;
+}
+
+/* Golden Waist Ring of Istikan */
+.istikan-glass::before {
+  content: '';
+  position: absolute;
+  top: 35%;
+  left: -2px;
+  right: -2px;
+  height: 4px;
+  background: linear-gradient(90deg, #b8860b, #ffd700, #b8860b);
+}
+
+/* Tea Spoon */
+.tea-spoon {
+  width: 6px;
+  height: 42px;
+  background: linear-gradient(90deg, #d3d3d3, #ffffff, #a9a9a9);
+  position: absolute;
+  top: -16px;
+  right: 8px;
+  transform: rotate(18deg);
+  border-radius: 3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Steam Animation */
+.steam {
+  width: 6px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+  position: absolute;
+  top: -24px;
+  filter: blur(4px);
+  animation: steamUp 2.5s infinite linear;
+}
+
+.steam-1 { left: 10px; animation-delay: 0s; }
+.steam-2 { left: 24px; animation-delay: 1.2s; }
+
+@keyframes steamUp {
+  0% { transform: translateY(0) scaleX(1); opacity: 0.7; }
+  50% { opacity: 0.4; }
+  100% { transform: translateY(-30px) scaleX(2.5); opacity: 0; }
+}
+
+.saucer {
+  width: 64px;
+  height: 12px;
+  background: linear-gradient(180deg, #d4af37 0%, #8a701e 100%);
+  border-radius: 50%;
+  margin-top: -6px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+  border: 1px solid #fff;
+}
+
+.sip-tooltip {
+  background: rgba(0, 0, 0, 0.8);
+  color: var(--gold-accent);
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 10px;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+/* Player Hands Bar */
+.bottom-hand-bar {
+  background: rgba(27, 15, 11, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 3px solid var(--wood-border);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+.hand-tiles-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  overflow-x: auto;
+  max-width: 100%;
+  padding: 4px 12px;
+}
+
+.player-info-tag {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.turn-indicator-badge {
+  background: var(--gold-accent);
+  color: var(--wood-dark);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  animation: pulseBadge 1.2s infinite alternate;
+}
+
+@keyframes pulseBadge {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.06); }
+}
+
+/* Action Buttons Bar (Draw / Pass / Sort) */
+.action-buttons-group {
+  display: flex;
+  gap: 12px;
+}
+
+.game-btn {
+  background: linear-gradient(180deg, var(--wood-light) 0%, var(--wood-medium) 100%);
+  border: 2px solid var(--gold-accent);
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 8px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+}
+
+.game-btn:hover:not(:disabled) {
+  background: var(--gold-accent);
+  color: var(--wood-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px var(--gold-glow);
+}
+
+.game-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: #666;
+}
+
+/* Iraqi Bot Dialogue Speech Bubble */
+.bot-banner {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  color: #111;
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 2px solid var(--gold-accent);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 25;
+  animation: fadeInDown 0.3s ease;
+}
+
+@keyframes fadeInDown {
+  0% { opacity: 0; transform: translate(-50%, -15px); }
+  100% { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* Score Ledger Modal & Banner */
+.score-notebook {
+  position: absolute;
+  top: 75px;
+  left: 20px;
+  background: #fdf6e3;
+  color: #2b2b2b;
+  width: 220px;
+  padding: 14px;
+  border-radius: 8px;
+  border-left: 6px solid #b58900;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+  font-family: inherit;
+  z-index: 12;
+}
+
+.notebook-header {
+  font-weight: 900;
+  font-size: 1.1rem;
+  border-bottom: 2px dashed #cb4b16;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  color: #cb4b16;
+  display: flex;
+  justify-content: space-between;
+}
+
+.player-score-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* Lobby Modal Overlay */
+.lobby-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.lobby-card {
+  background: linear-gradient(135deg, var(--wood-medium) 0%, var(--wood-dark) 100%);
+  border: 4px solid var(--wood-border);
+  outline: 2px solid var(--gold-accent);
+  border-radius: 24px;
+  width: 90%;
+  max-width: 520px;
+  padding: 32px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: center;
+}
+
+.lobby-title {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--gold-accent);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+
+.lobby-subtitle {
+  color: #ccc;
+  font-size: 0.95rem;
+}
+
+.mode-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.mode-card {
+  background: rgba(78, 41, 27, 0.6);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.mode-card.active {
+  border-color: var(--gold-accent);
+  background: rgba(229, 184, 66, 0.15);
+  box-shadow: 0 0 15px var(--gold-glow);
+}
+
+.mode-card:hover {
+  transform: translateY(-3px);
+}
+
+.input-field {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--wood-border);
+  border-radius: 8px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  outline: none;
+}
+
+.input-field:focus {
+  border-color: var(--gold-accent);
+}
+
+/* Round / Match End Banner Modal */
+.round-end-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 90;
+}
+
+.round-end-card {
+  background: linear-gradient(180deg, #361b11 0%, #1b0f0b 100%);
+  border: 3px solid var(--gold-accent);
+  border-radius: 20px;
+  padding: 28px;
+  width: 90%;
+  max-width: 440px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+}
