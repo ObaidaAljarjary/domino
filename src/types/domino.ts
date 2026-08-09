@@ -22,13 +22,13 @@ export interface Player {
   nameAr: string;
   hand: Tile[];
   isBot: boolean;
-  team: 1 | 2; // Team 1: Player 0 & Player 2, Team 2: Player 1 & Player 3
+  team: 1 | 2 | 3 | 4; // 2v2 uses 1 & 2; FFA uses 1, 2, 3, 4
   avatar: string;
   score: number;
   isPassed?: boolean;
 }
 
-export type GameMode = '1v1' | '2v2' | 'pass_play' | 'online';
+export type GameMode = '1v1' | '3_ffa' | '2v2' | '4_ffa' | 'pass_play' | 'online';
 export type Language = 'ar' | 'en';
 
 export interface GameBoard {
@@ -49,6 +49,7 @@ export interface ChatMessage {
 
 export interface GameState {
   mode: GameMode;
+  onlineSubMode?: '1v1' | '3_ffa' | '2v2' | '4_ffa';
   targetScore: number;
   players: Player[];
   currentTurnIndex: number;
@@ -62,13 +63,13 @@ export interface GameState {
   chatMessages: ChatMessage[];
   roundWinner: {
     playerIds: string[];
-    team?: 1 | 2;
+    team?: number;
     reason: 'domino' | 'blocked';
     points: number;
     pipCounts: { [playerId: string]: number };
   } | null;
   matchWinner: {
-    team?: 1 | 2;
+    team?: number;
     player?: Player;
   } | null;
 }

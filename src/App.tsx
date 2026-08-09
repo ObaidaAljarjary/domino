@@ -88,9 +88,33 @@ export const App: React.FC = () => {
       } else if (msg.type === 'JOIN_ROOM' && multiplayerManager.isHost) {
         const guestName = msg.senderName || 'Guest';
         setGameState((prev) => {
-          const updatedPlayers = prev.players.map((p) =>
-            p.id === 'p1' ? { ...p, name: guestName, nameAr: guestName, isBot: false } : p
+          // Find next available slot or update player
+          const emptySlotIndex = prev.players.findIndex(
+            (p) => p.isBot && p.name.includes('Waiting')
           );
+          let updatedPlayers = [...prev.players];
+
+          if (emptySlotIndex !== -1) {
+            updatedPlayers[emptySlotIndex] = {
+              ...updatedPlayers[emptySlotIndex],
+              name: guestName,
+              nameAr: guestName,
+              isBot: false,
+            };
+          } else {
+            const nextIdx = prev.players.length;
+            updatedPlayers.push({
+              id: `p${nextIdx}`,
+              name: guestName,
+              nameAr: guestName,
+              hand: [],
+              isBot: false,
+              team: (nextIdx + 1) as 1 | 2 | 3 | 4,
+              avatar: '👨‍🦱',
+              score: 0,
+            });
+          }
+
           const newState = { ...prev, players: updatedPlayers };
           multiplayerManager.broadcastMessage('GAME_STATE_SYNC', newState);
           return newState;
@@ -123,14 +147,15 @@ export const App: React.FC = () => {
     playerName: string,
     targetScore: number,
     roomCodeInput?: string,
-    isJoiningRoom?: boolean
+    isJoiningRoom?: boolean,
+    onlinePlayerCount: 2 | 3 | 4 = 2
   ) => {
     let initialPlayers: Player[] = [];
 
     if (mode === 'online') {
       setOnlineRoomCode(roomCodeInput || 'BAGHDAD');
       if (isJoiningRoom) {
-        setMyPlayerId('p1');
+        setMyPlayerId(`p${Math.floor(Math.random() * 3) + 1}`);
         multiplayerManager.joinRoom(
           roomCodeInput || 'BAGHDAD',
           () => {
@@ -146,28 +171,30 @@ export const App: React.FC = () => {
           (code) => setOnlineRoomCode(code),
           (err) => setOnlineStatusText(err)
         );
-        initialPlayers = [
-          {
-            id: 'p0',
-            name: playerName,
-            nameAr: playerName,
-            hand: [],
-            isBot: false,
-            team: 1,
-            avatar: '🧔‍♂️',
-            score: 0,
-          },
-          {
-            id: 'p1',
-            name: 'Waiting for Friend...',
-            nameAr: 'بانتظار انضمام صديقك...',
+
+        initialPlayers.push({
+          id: 'p0',
+          name: playerName,
+          nameAr: playerName,
+          hand: [],
+          isBot: false,
+          team: 1,
+          avatar: '🧔‍♂️',
+          score: 0,
+        });
+
+        for (let i = 1; i < onlinePlayerCount; i++) {
+          initialPlayers.push({
+            id: `p${i}`,
+            name: `Waiting for Player ${i + 1}...`,
+            nameAr: `بانتظار انضمام اللاعب ${i + 1}...`,
             hand: [],
             isBot: true,
-            team: 2,
-            avatar: '👨‍🦱',
+            team: (i + 1) as 1 | 2 | 3 | 4,
+            avatar: i === 1 ? '👳‍♂️' : i === 2 ? '👴' : '👵',
             score: 0,
-          },
-        ];
+          });
+        }
       }
     } else if (mode === '1v1') {
       setMyPlayerId('p0');
@@ -190,6 +217,40 @@ export const App: React.FC = () => {
           isBot: true,
           team: 2,
           avatar: '👳‍♂️',
+          score: 0,
+        },
+      ];
+    } else if (mode === '3_ffa') {
+      setMyPlayerId('p0');
+      initialPlayers = [
+        {
+          id: 'p0',
+          name: playerName,
+          nameAr: playerName,
+          hand: [],
+          isBot: false,
+          team: 1,
+          avatar: '🧔‍♂️',
+          score: 0,
+        },
+        {
+          id: 'p1',
+          name: 'Abu Jasim',
+          nameAr: 'أبو جاسم',
+          hand: [],
+          isBot: true,
+          team: 2,
+          avatar: '👳‍♂️',
+          score: 0,
+        },
+        {
+          id: 'p2',
+          name: 'Hajji Raad',
+          nameAr: 'الحجي أبو رعد',
+          hand: [],
+          isBot: true,
+          team: 3,
+          avatar: '👴',
           score: 0,
         },
       ];
@@ -222,7 +283,7 @@ export const App: React.FC = () => {
           nameAr: 'الحجي أبو رعد',
           hand: [],
           isBot: true,
-          team: 1,
+          team: 1, // Partner with P0
           avatar: '👴',
           score: 0,
         },
@@ -232,7 +293,51 @@ export const App: React.FC = () => {
           nameAr: 'أم فهد',
           hand: [],
           isBot: true,
+          team: 2, // Partner with P1
+          avatar: '👵',
+          score: 0,
+        },
+      ];
+    } else if (mode === '4_ffa') {
+      setMyPlayerId('p0');
+      initialPlayers = [
+        {
+          id: 'p0',
+          name: playerName,
+          nameAr: playerName,
+          hand: [],
+          isBot: false,
+          team: 1,
+          avatar: '🧔‍♂️',
+          score: 0,
+        },
+        {
+          id: 'p1',
+          name: 'Abu Jasim',
+          nameAr: 'أبو جاسم',
+          hand: [],
+          isBot: true,
           team: 2,
+          avatar: '👳‍♂️',
+          score: 0,
+        },
+        {
+          id: 'p2',
+          name: 'Hajji Raad',
+          nameAr: 'الحجي أبو رعد',
+          hand: [],
+          isBot: true,
+          team: 3,
+          avatar: '👴',
+          score: 0,
+        },
+        {
+          id: 'p3',
+          name: 'Um Fahad',
+          nameAr: 'أم فهد',
+          hand: [],
+          isBot: true,
+          team: 4,
           avatar: '👵',
           score: 0,
         },
@@ -284,12 +389,18 @@ export const App: React.FC = () => {
 
     let boneyard: TileType[] = [];
 
+    // Deal 7 tiles to each player
     updatedPlayers.forEach((p, idx) => {
       p.hand = fullDeck.slice(idx * 7, (idx + 1) * 7);
     });
 
-    if (mode === '1v1' || mode === 'pass_play' || mode === 'online') {
+    // 1v1, 3_ffa, pass_play have boneyard; 4-player modes have 0 boneyard (all 28 dealt!)
+    if (mode === '1v1' || mode === 'pass_play') {
       boneyard = fullDeck.slice(14);
+    } else if (mode === '3_ffa') {
+      boneyard = fullDeck.slice(21); // 7 tiles in boneyard for 3 players
+    } else {
+      boneyard = []; // 4 players = 28 tiles dealt
     }
 
     const openingInfo = findOpeningPlayerIndex(updatedPlayers);
@@ -341,7 +452,7 @@ export const App: React.FC = () => {
     .map((id) => currentPlayer?.hand.find((t) => t.id === id))
     .filter(Boolean) as TileType[];
 
-  // Execute playing a tile onto board with STRICT matching validation & visual alignment
+  // Execute playing a tile onto board
   const executePlayTile = (tile: TileType, position: PlayPosition) => {
     const isDouble = isDoubleTile(tile);
     if (isDouble && tile.top === 6) {
@@ -355,7 +466,6 @@ export const App: React.FC = () => {
     let matchingEndVal = 0;
 
     if (newLeftEnd === null || newRightEnd === null) {
-      // First tile played on empty board
       newLeftEnd = tile.top;
       newRightEnd = tile.bottom;
       displayTop = tile.top;
@@ -366,17 +476,14 @@ export const App: React.FC = () => {
       matchingEndVal = L;
 
       if (tile.top === L) {
-        // Matching end is tile.top. Exposed new left end is tile.bottom.
         newLeftEnd = tile.bottom;
-        displayTop = tile.bottom; // Facing left
-        displayBottom = tile.top;  // Touching existing chain (L)
+        displayTop = tile.bottom;
+        displayBottom = tile.top;
       } else if (tile.bottom === L) {
-        // Matching end is tile.bottom. Exposed new left end is tile.top.
         newLeftEnd = tile.top;
-        displayTop = tile.top;     // Facing left
-        displayBottom = tile.bottom; // Touching existing chain (L)
+        displayTop = tile.top;
+        displayBottom = tile.bottom;
       } else {
-        // Strict Validation: Tile does NOT match left end! Reject move.
         soundEngine.playPassSound();
         return;
       }
@@ -385,17 +492,14 @@ export const App: React.FC = () => {
       matchingEndVal = R;
 
       if (tile.top === R) {
-        // Matching end is tile.top. Exposed new right end is tile.bottom.
         newRightEnd = tile.bottom;
-        displayTop = tile.top;       // Touching existing chain (R)
-        displayBottom = tile.bottom; // Facing right
+        displayTop = tile.top;
+        displayBottom = tile.bottom;
       } else if (tile.bottom === R) {
-        // Matching end is tile.bottom. Exposed new right end is tile.top.
         newRightEnd = tile.top;
-        displayTop = tile.bottom;    // Touching existing chain (R)
-        displayBottom = tile.top;    // Facing right
+        displayTop = tile.bottom;
+        displayBottom = tile.top;
       } else {
-        // Strict Validation: Tile does NOT match right end! Reject move.
         soundEngine.playPassSound();
         return;
       }
@@ -533,7 +637,7 @@ export const App: React.FC = () => {
     });
   };
 
-  // Handle Round Win
+  // Handle Round Win (Domino / تسكير)
   const handleRoundWin = (
     winnerPlayer: Player,
     reason: 'domino' | 'blocked',
@@ -557,6 +661,7 @@ export const App: React.FC = () => {
         .filter((p) => p.team === opposingTeam)
         .reduce((sum, p) => sum + pipCounts[p.id], 0);
     } else {
+      // 1v1, 3_ffa, 4_ffa: sum of pips of ALL other opponents
       pointsGained = currentPlayers
         .filter((p) => p.id !== winnerPlayer.id)
         .reduce((sum, p) => sum + pipCounts[p.id], 0);
@@ -591,7 +696,7 @@ export const App: React.FC = () => {
     }));
   };
 
-  // Handle Blocked Game
+  // Handle Blocked Game (القفلة / قفل)
   const handleBlockedGame = (currentPlayers: Player[]) => {
     soundEngine.playBlockSound();
     soundEngine.speakIraqiPhrase('قفلت الجلسة! نحسب الخرز!');
@@ -710,7 +815,6 @@ export const App: React.FC = () => {
       return;
     }
 
-    // Verify move validity for position
     const movesForTile = validMoves.filter((m) => m.tile.id === tileToPlay!.id);
     if (movesForTile.some((m) => m.position === position || m.position === 'first')) {
       executePlayTile(tileToPlay, position);

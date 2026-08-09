@@ -49,7 +49,6 @@ export function getValidMoves(
   // Empty board
   if (leftEnd === null || rightEnd === null) {
     if (mustPlayHighestDouble) {
-      // Find highest double in hand
       let highestDouble: Tile | null = null;
       for (let d = 6; d >= 0; d--) {
         const found = hand.find((t) => t.top === d && t.bottom === d);
@@ -69,7 +68,6 @@ export function getValidMoves(
       }
     }
 
-    // Play any tile on empty board
     return hand.map((tile) => ({
       tile,
       position: 'first',
@@ -96,7 +94,6 @@ export function getValidMoves(
 
     // Check right end
     if (matchesRightTop || matchesRightBottom) {
-      // Avoid duplicate entry if leftEnd === rightEnd and tile fits both
       const alreadyAddedLeft = validMoves.some(
         (m) => m.tile.id === tile.id && m.position === 'left'
       );
@@ -129,7 +126,6 @@ export function findOpeningPlayerIndex(players: Player[]): {
     }
   }
 
-  // Fallback: Player with highest total pips if no doubles
   let maxPips = -1;
   let chosenIdx = 0;
   players.forEach((p, idx) => {
@@ -158,11 +154,9 @@ export function selectBotMove(
   );
   if (validMoves.length === 0) return null;
 
-  // 1. Prefer playing double tiles first (to clear heavy doubles like 6-6, 5-5)
   const doubleMove = validMoves.find((m) => isDoubleTile(m.tile));
   if (doubleMove) return doubleMove;
 
-  // 2. Prefer tiles with higher total pips to dump points
   validMoves.sort((a, b) => {
     const pipA = a.tile.top + a.tile.bottom;
     const pipB = b.tile.top + b.tile.bottom;

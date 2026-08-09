@@ -32,12 +32,12 @@ export const ScoreBoardComponent: React.FC<ScoreBoardProps> = ({
         </div>
 
         <div className="player-score-row" style={{ color: '#268bd2' }}>
-          <span>{isArabic ? 'فريقك (أنت + البوت)' : 'Team 1 (You)'}</span>
+          <span>{isArabic ? 'فريق 1 (أنت)' : 'Team 1 (You)'}</span>
           <span>{team1Score} pt</span>
         </div>
 
         <div className="player-score-row" style={{ color: '#dc322f' }}>
-          <span>{isArabic ? 'فريق المنافسين' : 'Team 2 (Opponents)'}</span>
+          <span>{isArabic ? 'فريق 2 (المنافسين)' : 'Team 2 (Opponents)'}</span>
           <span>{team2Score} pt</span>
         </div>
       </div>

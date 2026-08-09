@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { GameMode, Language } from '../types/domino';
-import { Users, User, Globe, Trophy, Play, Copy, Check } from 'lucide-react';
+import { Users, User, Globe, Trophy, Play, Copy, Check, UserPlus } from 'lucide-react';
 
 interface LobbyProps {
   onStartGame: (
@@ -8,7 +8,8 @@ interface LobbyProps {
     playerName: string,
     targetScore: number,
     roomCode?: string,
-    isJoiningRoom?: boolean
+    isJoiningRoom?: boolean,
+    onlinePlayerCount?: 2 | 3 | 4
   ) => void;
   language: Language;
   onToggleLanguage: () => void;
@@ -23,6 +24,7 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
   const [mode, setMode] = useState<GameMode>('1v1');
   const [playerName, setPlayerName] = useState(isArabic ? 'أبو العز' : 'Player 1');
   const [targetScore, setTargetScore] = useState<number>(101);
+  const [onlinePlayerCount, setOnlinePlayerCount] = useState<2 | 3 | 4>(2);
   const [hostRoomCode, setHostRoomCode] = useState<string>(
     Math.random().toString(36).substring(2, 8).toUpperCase()
   );
@@ -39,9 +41,9 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
   const handleStart = () => {
     if (mode === 'online' && isJoining) {
       if (!joinCodeInput.trim()) return;
-      onStartGame(mode, playerName, targetScore, joinCodeInput.trim(), true);
+      onStartGame(mode, playerName, targetScore, joinCodeInput.trim(), true, onlinePlayerCount);
     } else if (mode === 'online') {
-      onStartGame(mode, playerName, targetScore, hostRoomCode, false);
+      onStartGame(mode, playerName, targetScore, hostRoomCode, false, onlinePlayerCount);
     } else {
       onStartGame(mode, playerName, targetScore);
     }
@@ -49,7 +51,7 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
 
   return (
     <div className="lobby-overlay">
-      <div className="lobby-card">
+      <div className="lobby-card" style={{ maxWidth: '580px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div className="brand-title">
             <span style={{ fontSize: '2.2rem' }}>🀏</span>
@@ -63,8 +65,8 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
 
         <div className="lobby-subtitle">
           {isArabic
-            ? 'لعبة الدومينو العراقية الأصيلة - أجواء القهوة الشعبية الشايخانة!'
-            : 'Authentic Iraqi Cafe Dominoes - Classic Rules & Chaikhana Vibe!'}
+            ? 'لعبة الدومينو العراقية الأصيلة - 2 و 3 و 4 لاعبين أونلاين وبوتات!'
+            : 'Authentic Iraqi Cafe Dominoes - 2, 3 & 4 Players Online & Bots!'}
         </div>
 
         {/* Player Name Input */}
@@ -86,15 +88,26 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
             {isArabic ? 'اختر نمط اللعب:' : 'Select Game Mode:'}
           </label>
 
-          <div className="mode-selector" style={{ marginTop: '8px' }}>
+          <div className="mode-selector" style={{ marginTop: '8px', gridTemplateColumns: '1fr 1fr' }}>
             <div
               className={`mode-card ${mode === '1v1' ? 'active' : ''}`}
               onClick={() => setMode('1v1')}
             >
               <User size={24} color="var(--gold-accent)" />
-              <strong style={{ fontSize: '0.95rem' }}>{isArabic ? '1 ضد 1 (بوت)' : '1v1 Singleplayer'}</strong>
+              <strong style={{ fontSize: '0.95rem' }}>{isArabic ? '1 ضد 1 (لاعبين)' : '1v1 Match'}</strong>
               <span style={{ fontSize: '0.75rem', color: '#aaa' }}>
-                {isArabic ? 'ضد البوت أبو جاسم' : 'vs Abu Jasim Bot'}
+                {isArabic ? 'أنت ضد البوت أبو جاسم' : 'vs Abu Jasim Bot'}
+              </span>
+            </div>
+
+            <div
+              className={`mode-card ${mode === '3_ffa' ? 'active' : ''}`}
+              onClick={() => setMode('3_ffa')}
+            >
+              <UserPlus size={24} color="var(--gold-accent)" />
+              <strong style={{ fontSize: '0.95rem' }}>{isArabic ? '3 لاعبين فردي' : '3 Players FFA'}</strong>
+              <span style={{ fontSize: '0.75rem', color: '#aaa' }}>
+                {isArabic ? 'أنت وبوتين كل من لحاله' : '3 Player Free For All'}
               </span>
             </div>
 
@@ -103,37 +116,50 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
               onClick={() => setMode('2v2')}
             >
               <Users size={24} color="var(--gold-accent)" />
-              <strong style={{ fontSize: '0.95rem' }}>{isArabic ? '2 ضد 2 (فرق)' : '2v2 Team Battle'}</strong>
+              <strong style={{ fontSize: '0.95rem' }}>{isArabic ? '4 لاعبين (فرق 2v2)' : '2v2 Team Battle'}</strong>
               <span style={{ fontSize: '0.75rem', color: '#aaa' }}>
                 {isArabic ? 'أنت والحجي ضد المنافسين' : 'You + Bot vs 2 Bots'}
               </span>
             </div>
 
             <div
+              className={`mode-card ${mode === '4_ffa' ? 'active' : ''}`}
+              onClick={() => setMode('4_ffa')}
+            >
+              <Users size={24} color="var(--gold-accent)" />
+              <strong style={{ fontSize: '0.95rem' }}>{isArabic ? '4 لاعبين (فردي)' : '4 Players FFA'}</strong>
+              <span style={{ fontSize: '0.75rem', color: '#aaa' }}>
+                {isArabic ? '4 لاعبين كل من لحاله' : '4 Player Free For All'}
+              </span>
+            </div>
+
+            <div
               className={`mode-card ${mode === 'pass_play' ? 'active' : ''}`}
               onClick={() => setMode('pass_play')}
+              style={{ gridColumn: 'span 1' }}
             >
               <Users size={24} color="var(--gold-accent)" />
               <strong style={{ fontSize: '0.95rem' }}>{isArabic ? 'لعب محلي' : 'Pass & Play'}</strong>
               <span style={{ fontSize: '0.75rem', color: '#aaa' }}>
-                {isArabic ? 'لاعبين على نفس الجهاز' : '2 Players on Same Device'}
+                {isArabic ? 'على نفس الجهاز' : 'Same Device'}
               </span>
             </div>
 
             <div
               className={`mode-card ${mode === 'online' ? 'active' : ''}`}
               onClick={() => setMode('online')}
+              style={{ gridColumn: 'span 1' }}
             >
               <Globe size={24} color="var(--gold-accent)" />
               <strong style={{ fontSize: '0.95rem' }}>{isArabic ? 'غرفة أونلاين' : 'Online Room'}</strong>
               <span style={{ fontSize: '0.75rem', color: '#aaa' }}>
-                {isArabic ? 'انشئ غرفة أو انضم لصديق' : 'Play with Friends via Code'}
+                {isArabic ? '2 أو 3 أو 4 أصدقاء' : '2, 3 or 4 Players'}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Online Room options */}
+        {/* Online Room Mode Options */}
         {mode === 'online' && (
           <div style={{ background: 'rgba(0,0,0,0.3)', padding: '14px', borderRadius: '12px', textAlign: 'start' }}>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
@@ -153,6 +179,26 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
               </button>
             </div>
 
+            {!isJoining && (
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '0.85rem', color: 'var(--gold-accent)', fontWeight: 700 }}>
+                  {isArabic ? 'عدد لاعبي الغرفة:' : 'Room Player Count:'}
+                </label>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                  {[2, 3, 4].map((count) => (
+                    <button
+                      key={count}
+                      className={`game-btn ${onlinePlayerCount === count ? 'active' : ''}`}
+                      style={{ flex: 1, fontSize: '0.85rem', justifyContent: 'center' }}
+                      onClick={() => setOnlinePlayerCount(count as 2 | 3 | 4)}
+                    >
+                      {count} {isArabic ? 'لاعبين' : 'Players'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {isJoining ? (
               <div>
                 <label style={{ fontSize: '0.85rem', color: 'var(--gold-accent)' }}>
@@ -169,7 +215,7 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
             ) : (
               <div>
                 <label style={{ fontSize: '0.85rem', color: 'var(--gold-accent)' }}>
-                  {isArabic ? 'رمز غرفتك الخاص (شاركه مع صديقك):' : 'Your Unique Room Code (Share with friend):'}
+                  {isArabic ? 'رمز غرفتك الخاص (شاركه مع أصدقائك):' : 'Your Unique Room Code (Share with friends):'}
                 </label>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
                   <input
