@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { GameBoard, Tile as TileType, PlayPosition } from '../types/domino';
 import { TileComponent } from './Tile';
 
@@ -23,6 +23,38 @@ export const TableComponent: React.FC<TableProps> = ({
   const [isDragOverLeft, setIsDragOverLeft] = useState(false);
   const [isDragOverRight, setIsDragOverRight] = useState(false);
   const [isDragOverCenter, setIsDragOverCenter] = useState(false);
+
+  const [scale, setScale] = useState(1);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const snakeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (containerRef.current && snakeRef.current) {
+        // Measure unscaled width by temporarily removing scale if necessary, or scrollWidth is usually unscaled
+        const containerWidth = containerRef.current.clientWidth - 40; // minus padding
+        // Reset scale temporarily to get natural width if needed, but scrollWidth usually represents natural width 
+        // if transform is used, wait, scrollWidth might be affected by transform? No, getBoundingClientRect() is affected, scrollWidth is not.
+        const snakeWidth = snakeRef.current.scrollWidth;
+        
+        if (snakeWidth > containerWidth && containerWidth > 0) {
+          setScale(containerWidth / snakeWidth);
+        } else {
+          setScale(1);
+        }
+      }
+    };
+
+    updateScale();
+    // Use a small timeout to allow layout to settle after tiles are rendered
+    const timeoutId = setTimeout(updateScale, 50);
+
+    window.addEventListener('resize', updateScale);
+    return () => {
+      window.removeEventListener('resize', updateScale);
+      clearTimeout(timeoutId);
+    };
+  }, [board.tiles.length]);
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, position: PlayPosition) => {
     e.preventDefault();
@@ -71,14 +103,18 @@ export const TableComponent: React.FC<TableProps> = ({
   const showRightTarget = selectedTile && validPositions.includes('right');
 
   return (
-    <div className="board-area centered-table-board">
+    <div className="board-area centered-table-board" ref={containerRef}>
       {/* Background Ornaments */}
       <div className="iraqi-ornament-corner top-left" />
       <div className="iraqi-ornament-corner top-right" />
       <div className="iraqi-ornament-corner bottom-left" />
       <div className="iraqi-ornament-corner bottom-right" />
 
-      <div className="snake-container centered-snake-wrapper">
+      <div 
+        className="snake-container centered-snake-wrapper" 
+        ref={snakeRef}
+        style={{ transform: `scale(${scale})` }}
+      >
         {/* Left Placement Target */}
         <div
           className={`drop-zone-wrapper ${showLeftTarget ? 'visible' : ''} ${

@@ -161,17 +161,15 @@ html, body, #root {
 /* Centered Domino Snake Container */
 .snake-container.centered-snake-wrapper {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
-  align-content: center;
   gap: 6px;
-  width: 100%;
-  max-width: 90%;
-  max-height: 85%;
+  width: max-content;
   position: relative;
   margin: auto;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease;
+  transform-origin: center center;
 }
 
 /* Traditional Iraqi Arabesque Corner Ornaments */
