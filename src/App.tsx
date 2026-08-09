@@ -76,7 +76,7 @@ export const App: React.FC = () => {
     matchWinner: null,
   });
 
-  // Handle Online Room Status Callbacks
+  // Handle Online Room Status & Incoming Messages
   useEffect(() => {
     multiplayerManager.onStatusCallback = (status) => {
       setOnlineStatusText(status);
@@ -85,16 +85,22 @@ export const App: React.FC = () => {
     multiplayerManager.onMessageCallback = (msg: RoomMessage) => {
       if (msg.type === 'GAME_STATE_SYNC') {
         setGameState(msg.payload);
+      } else if (msg.type === 'ASSIGN_SLOT') {
+        if (msg.payload.targetPeerId === multiplayerManager.myPeerId) {
+          setMyPlayerId(msg.payload.slotId);
+          setGameState(msg.payload.state);
+        }
       } else if (msg.type === 'JOIN_ROOM' && multiplayerManager.isHost) {
         const guestName = msg.senderName || 'Guest';
         setGameState((prev) => {
-          // Find next available slot or update player
           const emptySlotIndex = prev.players.findIndex(
             (p) => p.isBot && p.name.includes('Waiting')
           );
           let updatedPlayers = [...prev.players];
+          let assignedSlotId = 'p1';
 
           if (emptySlotIndex !== -1) {
+            assignedSlotId = updatedPlayers[emptySlotIndex].id;
             updatedPlayers[emptySlotIndex] = {
               ...updatedPlayers[emptySlotIndex],
               name: guestName,
@@ -103,8 +109,9 @@ export const App: React.FC = () => {
             };
           } else {
             const nextIdx = prev.players.length;
+            assignedSlotId = `p${nextIdx}`;
             updatedPlayers.push({
-              id: `p${nextIdx}`,
+              id: assignedSlotId,
               name: guestName,
               nameAr: guestName,
               hand: [],
@@ -116,6 +123,14 @@ export const App: React.FC = () => {
           }
 
           const newState = { ...prev, players: updatedPlayers };
+
+          // Respond to joining guest with assigned slot ID & state
+          multiplayerManager.broadcastMessage('ASSIGN_SLOT', {
+            targetPeerId: msg.senderId,
+            slotId: assignedSlotId,
+            state: newState,
+          });
+
           multiplayerManager.broadcastMessage('GAME_STATE_SYNC', newState);
           return newState;
         });
@@ -153,11 +168,12 @@ export const App: React.FC = () => {
     let initialPlayers: Player[] = [];
 
     if (mode === 'online') {
-      setOnlineRoomCode(roomCodeInput || 'BAGHDAD');
+      const roomCode = (roomCodeInput || 'BAGHDAD').toUpperCase().trim();
+      setOnlineRoomCode(roomCode);
+
       if (isJoiningRoom) {
-        setMyPlayerId(`p${Math.floor(Math.random() * 3) + 1}`);
         multiplayerManager.joinRoom(
-          roomCodeInput || 'BAGHDAD',
+          roomCode,
           () => {
             multiplayerManager.broadcastMessage('JOIN_ROOM', {}, playerName);
           },
@@ -167,7 +183,7 @@ export const App: React.FC = () => {
       } else {
         setMyPlayerId('p0');
         multiplayerManager.createRoom(
-          roomCodeInput || 'BAGHDAD',
+          roomCode,
           (code) => setOnlineRoomCode(code),
           (err) => setOnlineStatusText(err)
         );
@@ -283,7 +299,7 @@ export const App: React.FC = () => {
           nameAr: 'الحجي أبو رعد',
           hand: [],
           isBot: true,
-          team: 1, // Partner with P0
+          team: 1,
           avatar: '👴',
           score: 0,
         },
@@ -293,7 +309,7 @@ export const App: React.FC = () => {
           nameAr: 'أم فهد',
           hand: [],
           isBot: true,
-          team: 2, // Partner with P1
+          team: 2,
           avatar: '👵',
           score: 0,
         },
@@ -394,13 +410,12 @@ export const App: React.FC = () => {
       p.hand = fullDeck.slice(idx * 7, (idx + 1) * 7);
     });
 
-    // 1v1, 3_ffa, pass_play have boneyard; 4-player modes have 0 boneyard (all 28 dealt!)
     if (mode === '1v1' || mode === 'pass_play') {
       boneyard = fullDeck.slice(14);
     } else if (mode === '3_ffa') {
-      boneyard = fullDeck.slice(21); // 7 tiles in boneyard for 3 players
+      boneyard = fullDeck.slice(21);
     } else {
-      boneyard = []; // 4 players = 28 tiles dealt
+      boneyard = [];
     }
 
     const openingInfo = findOpeningPlayerIndex(updatedPlayers);
@@ -637,7 +652,7 @@ export const App: React.FC = () => {
     });
   };
 
-  // Handle Round Win (Domino / تسكير)
+  // Handle Round Win
   const handleRoundWin = (
     winnerPlayer: Player,
     reason: 'domino' | 'blocked',
@@ -661,7 +676,6 @@ export const App: React.FC = () => {
         .filter((p) => p.team === opposingTeam)
         .reduce((sum, p) => sum + pipCounts[p.id], 0);
     } else {
-      // 1v1, 3_ffa, 4_ffa: sum of pips of ALL other opponents
       pointsGained = currentPlayers
         .filter((p) => p.id !== winnerPlayer.id)
         .reduce((sum, p) => sum + pipCounts[p.id], 0);
@@ -696,7 +710,7 @@ export const App: React.FC = () => {
     }));
   };
 
-  // Handle Blocked Game (القفلة / قفل)
+  // Handle Blocked Game
   const handleBlockedGame = (currentPlayers: Player[]) => {
     soundEngine.playBlockSound();
     soundEngine.speakIraqiPhrase('قفلت الجلسة! نحسب الخرز!');
@@ -798,9 +812,10 @@ export const App: React.FC = () => {
   };
 
   const handleTilePlacementAction = (position: PlayPosition, droppedTileId?: string) => {
+    const activePlayerObj = gameState.players.find((p) => p.id === myPlayerId) || currentPlayer;
     let tileToPlay = selectedTile;
-    if (droppedTileId && currentPlayer) {
-      const foundInHand = currentPlayer.hand.find((t) => t.id === droppedTileId);
+    if (droppedTileId && activePlayerObj) {
+      const foundInHand = activePlayerObj.hand.find((t) => t.id === droppedTileId);
       if (foundInHand) tileToPlay = foundInHand;
     }
 

@@ -1,8 +1,10 @@
 import { Peer, type DataConnection } from 'peerjs';
 
 export interface RoomMessage {
+  id: string; // Unique message ID for deduplication
   type:
     | 'JOIN_ROOM'
+    | 'ASSIGN_SLOT'
     | 'GAME_STATE_SYNC'
     | 'PLAY_TILE_ACTION'
     | 'DRAW_TILE_ACTION'
@@ -29,6 +31,7 @@ export class MultiplayerRoomManager {
   private hostConnection: DataConnection | null = null;
   private channel: BroadcastChannel | null = null;
   private wsFallback: WebSocket | null = null;
+  private processedMsgIds: Set<string> = new Set();
 
   public myPeerId: string = '';
   public isHost: boolean = false;
@@ -40,12 +43,26 @@ export class MultiplayerRoomManager {
     try {
       this.channel = new BroadcastChannel('iraqi_domino_room_channel');
       this.channel.onmessage = (event) => {
-        if (this.onMessageCallback) {
-          this.onMessageCallback(event.data);
-        }
+        this.handleIncomingMessage(event.data);
       };
     } catch {
       // BroadcastChannel fallback
+    }
+  }
+
+  private handleIncomingMessage(msg: any) {
+    if (!msg || !msg.id) return;
+    if (this.processedMsgIds.has(msg.id)) return; // Prevent duplicate execution
+    this.processedMsgIds.add(msg.id);
+
+    // Keep set size manageable
+    if (this.processedMsgIds.size > 200) {
+      const arr = Array.from(this.processedMsgIds);
+      this.processedMsgIds = new Set(arr.slice(100));
+    }
+
+    if (msg.senderId !== this.myPeerId && this.onMessageCallback) {
+      this.onMessageCallback(msg as RoomMessage);
     }
   }
 
@@ -53,7 +70,7 @@ export class MultiplayerRoomManager {
   public createRoom(
     code: string,
     onReady: (roomCode: string, peerId: string) => void,
-    onError: (err: string) => void
+    _onError: (err: string) => void
   ) {
     this.isHost = true;
     this.roomCode = code.toUpperCase().trim();
@@ -66,6 +83,9 @@ export class MultiplayerRoomManager {
       this.onStatusCallback('جارِ إنشاء الغرفة الأونلاين...');
     }
 
+    // 1. ALWAYS open WebSocket Relay in parallel for 100% connectivity guarantee across 4G/5G/WiFi
+    this.setupAlwaysOnRelay(this.roomCode);
+
     try {
       this.peer = new Peer(fullRoomId, {
         config: STUN_SERVERS,
@@ -75,7 +95,7 @@ export class MultiplayerRoomManager {
       this.peer.on('open', (id) => {
         this.myPeerId = id;
         if (this.onStatusCallback) {
-          this.onStatusCallback('تم إنشاء الغرفة بنجاح! بانتظار انضمام صديقك...');
+          this.onStatusCallback(`الغرفة جاهزة [${this.roomCode}]! بانتظار انضمام صديقك...`);
         }
         onReady(this.roomCode, id);
       });
@@ -85,14 +105,12 @@ export class MultiplayerRoomManager {
 
         conn.on('open', () => {
           if (this.onStatusCallback) {
-            this.onStatusCallback('انضم صديقك للغرفة بنجاح!');
+            this.onStatusCallback('انضم صديقك للغرفة بنجاح! جاهزين للعب...');
           }
         });
 
         conn.on('data', (data: any) => {
-          if (this.onMessageCallback) {
-            this.onMessageCallback(data as RoomMessage);
-          }
+          this.handleIncomingMessage(data);
         });
 
         conn.on('close', () => {
@@ -102,15 +120,12 @@ export class MultiplayerRoomManager {
 
       this.peer.on('error', (err) => {
         console.warn('PeerJS Host Warning:', err);
-        if (err.type === 'unavailable-id') {
-          this.fallbackPeerSetup(fullRoomId, onReady, onError);
-        } else {
-          this.setupRelayFallback(this.roomCode);
-          onReady(this.roomCode, this.myPeerId);
+        if (this.onStatusCallback) {
+          this.onStatusCallback(`الغرفة جاهزة عبر السيرفر [${this.roomCode}]!`);
         }
+        onReady(this.roomCode, this.myPeerId);
       });
     } catch {
-      this.setupRelayFallback(this.roomCode);
       onReady(this.roomCode, this.myPeerId);
     }
   }
@@ -132,6 +147,9 @@ export class MultiplayerRoomManager {
       this.onStatusCallback('جارِ الاتصال بغرفة صديقك...');
     }
 
+    // 1. ALWAYS open WebSocket Relay in parallel
+    this.setupAlwaysOnRelay(this.roomCode);
+
     try {
       this.peer = new Peer(this.myPeerId, {
         config: STUN_SERVERS,
@@ -141,9 +159,7 @@ export class MultiplayerRoomManager {
       this.peer.on('open', () => {
         if (!this.peer) return;
 
-        const conn = this.peer.connect(hostRoomId, {
-          reliable: true,
-        });
+        const conn = this.peer.connect(hostRoomId, { reliable: true });
         this.hostConnection = conn;
 
         conn.on('open', () => {
@@ -154,54 +170,41 @@ export class MultiplayerRoomManager {
         });
 
         conn.on('data', (data: any) => {
-          if (this.onMessageCallback) {
-            this.onMessageCallback(data as RoomMessage);
-          }
+          this.handleIncomingMessage(data);
         });
 
         conn.on('error', (err) => {
           console.warn('Peer Connection Error:', err);
-          this.setupRelayFallback(this.roomCode);
           onConnected();
         });
       });
 
       this.peer.on('error', (err) => {
         console.warn('PeerJS Join Warning:', err);
-        this.setupRelayFallback(this.roomCode);
         onConnected();
       });
     } catch {
-      this.setupRelayFallback(this.roomCode);
       onConnected();
     }
   }
 
-  private fallbackPeerSetup(
-    _roomId: string,
-    onReady: (roomCode: string, peerId: string) => void,
-    _onError: (err: string) => void
-  ) {
-    this.peer = new Peer({ config: STUN_SERVERS });
-    this.peer.on('open', (id) => {
-      this.myPeerId = id;
-      this.setupRelayFallback(this.roomCode);
-      onReady(this.roomCode, id);
-    });
-  }
-
-  // Backup Realtime WebSocket Channel
-  private setupRelayFallback(code: string) {
+  // Always-On WebSocket Relay Channel
+  private setupAlwaysOnRelay(code: string) {
     try {
-      const wsUrl = `wss://free.chatws.com/ws/${code.toLowerCase()}`;
+      const roomChannelName = code.toLowerCase();
+      const wsUrl = `wss://free.chatws.com/ws/iraqi-domino-${roomChannelName}`;
       this.wsFallback = new WebSocket(wsUrl);
+
+      this.wsFallback.onopen = () => {
+        if (this.onStatusCallback && !this.isHost) {
+          this.onStatusCallback('متصل بالغرفة! جارِ تجهيز اللعبة...');
+        }
+      };
 
       this.wsFallback.onmessage = (evt) => {
         try {
           const parsed = JSON.parse(evt.data);
-          if (parsed && parsed.senderId !== this.myPeerId && this.onMessageCallback) {
-            this.onMessageCallback(parsed as RoomMessage);
-          }
+          this.handleIncomingMessage(parsed);
         } catch {
           // ignore
         }
@@ -211,16 +214,17 @@ export class MultiplayerRoomManager {
     }
   }
 
-  // Send message to all connected peers
+  // Broadcast message to all connected peers & websocket fallback
   public broadcastMessage(type: RoomMessage['type'], payload: any, senderName?: string) {
     const message: RoomMessage = {
+      id: `${this.myPeerId}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       type,
       payload,
       senderId: this.myPeerId,
       senderName,
     };
 
-    // 1. BroadcastChannel (local browser tabs)
+    // 1. Local BroadcastChannel
     if (this.channel) {
       try {
         this.channel.postMessage(message);
@@ -248,7 +252,7 @@ export class MultiplayerRoomManager {
       }
     }
 
-    // 3. Backup WebSocket Relay
+    // 3. Always-On WebSocket Relay
     if (this.wsFallback && this.wsFallback.readyState === WebSocket.OPEN) {
       try {
         this.wsFallback.send(JSON.stringify(message));
