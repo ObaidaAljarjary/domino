@@ -19,13 +19,14 @@ import {
   isDoubleTile,
 } from './utils/dominoRules';
 import { soundEngine } from './utils/soundEngine';
+import { multiplayerManager, type RoomMessage } from './utils/multiplayer';
 import { TableComponent } from './components/Table';
 import { HandComponent } from './components/Hand';
 import { IstikanTeaComponent } from './components/IstikanTea';
 import { ScoreBoardComponent } from './components/ScoreBoard';
 import { BotBannerComponent } from './components/BotBanner';
 import { LobbyComponent } from './components/Lobby';
-import { Volume2, VolumeX, RotateCcw, Home, Sparkles, Radio } from 'lucide-react';
+import { Volume2, VolumeX, RotateCcw, Home, Sparkles, Radio, Copy, Check, Users } from 'lucide-react';
 import './styles/chaikhana.css';
 
 const BOT_DIALOGUES_PLAY = [
@@ -45,6 +46,11 @@ export const App: React.FC = () => {
   const [soundMuted, setSoundMuted] = useState(false);
   const [ambientActive, setAmbientActive] = useState(false);
   const [selectedTile, setSelectedTile] = useState<TileType | null>(null);
+  const [onlineRoomCode, setOnlineRoomCode] = useState<string | null>(null);
+  const [onlineStatusText, setOnlineStatusText] = useState<string>('');
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [myPlayerId, setMyPlayerId] = useState<string>('p0');
+
   const [activeBotDialogue, setActiveBotDialogue] = useState<{
     botNameAr: string;
     botNameEn: string;
@@ -70,15 +76,102 @@ export const App: React.FC = () => {
     matchWinner: null,
   });
 
+  // Handle Online Room Status Callbacks
+  useEffect(() => {
+    multiplayerManager.onStatusCallback = (status) => {
+      setOnlineStatusText(status);
+    };
+
+    multiplayerManager.onMessageCallback = (msg: RoomMessage) => {
+      if (msg.type === 'GAME_STATE_SYNC') {
+        setGameState(msg.payload);
+      } else if (msg.type === 'JOIN_ROOM' && multiplayerManager.isHost) {
+        // Guest joined room! Update Guest player name
+        const guestName = msg.senderName || 'Guest';
+        setGameState((prev) => {
+          const updatedPlayers = prev.players.map((p) =>
+            p.id === 'p1' ? { ...p, name: guestName, nameAr: guestName, isBot: false } : p
+          );
+          const newState = { ...prev, players: updatedPlayers };
+          multiplayerManager.broadcastMessage('GAME_STATE_SYNC', newState);
+          return newState;
+        });
+      } else if (msg.type === 'PLAY_TILE_ACTION' && multiplayerManager.isHost) {
+        const { tile, position } = msg.payload;
+        executePlayTile(tile, position);
+      } else if (msg.type === 'DRAW_TILE_ACTION' && multiplayerManager.isHost) {
+        handleDrawTile();
+      } else if (msg.type === 'PASS_TURN_ACTION' && multiplayerManager.isHost) {
+        handlePassTurn();
+      }
+    };
+  }, []);
+
+  // Broadcast state changes if Host
+  const updateAndBroadcastState = (updater: (prev: GameState) => GameState) => {
+    setGameState((prev) => {
+      const nextState = updater(prev);
+      if (prev.mode === 'online' && multiplayerManager.isHost) {
+        multiplayerManager.broadcastMessage('GAME_STATE_SYNC', nextState);
+      }
+      return nextState;
+    });
+  };
+
   // Start New Game Match
   const startNewMatch = (
     mode: GameMode,
     playerName: string,
-    targetScore: number
+    targetScore: number,
+    roomCodeInput?: string,
+    isJoiningRoom?: boolean
   ) => {
     let initialPlayers: Player[] = [];
 
-    if (mode === '1v1') {
+    if (mode === 'online') {
+      setOnlineRoomCode(roomCodeInput || 'BAGHDAD');
+      if (isJoiningRoom) {
+        setMyPlayerId('p1');
+        multiplayerManager.joinRoom(
+          roomCodeInput || 'BAGHDAD',
+          () => {
+            multiplayerManager.broadcastMessage('JOIN_ROOM', {}, playerName);
+          },
+          (err) => setOnlineStatusText(err)
+        );
+        return;
+      } else {
+        setMyPlayerId('p0');
+        multiplayerManager.createRoom(
+          roomCodeInput || 'BAGHDAD',
+          (code) => setOnlineRoomCode(code),
+          (err) => setOnlineStatusText(err)
+        );
+        initialPlayers = [
+          {
+            id: 'p0',
+            name: playerName,
+            nameAr: playerName,
+            hand: [],
+            isBot: false,
+            team: 1,
+            avatar: '🧔‍♂️',
+            score: 0,
+          },
+          {
+            id: 'p1',
+            name: 'Waiting for Friend...',
+            nameAr: 'بانتظار انضمام صديقك...',
+            hand: [],
+            isBot: true,
+            team: 2,
+            avatar: '👨‍🦱',
+            score: 0,
+          },
+        ];
+      }
+    } else if (mode === '1v1') {
+      setMyPlayerId('p0');
       initialPlayers = [
         {
           id: 'p0',
@@ -102,6 +195,7 @@ export const App: React.FC = () => {
         },
       ];
     } else if (mode === '2v2') {
+      setMyPlayerId('p0');
       initialPlayers = [
         {
           id: 'p0',
@@ -129,7 +223,7 @@ export const App: React.FC = () => {
           nameAr: 'الحجي أبو رعد',
           hand: [],
           isBot: true,
-          team: 1, // Partner with Player 0
+          team: 1,
           avatar: '👴',
           score: 0,
         },
@@ -139,13 +233,13 @@ export const App: React.FC = () => {
           nameAr: 'أم فهد',
           hand: [],
           isBot: true,
-          team: 2, // Partner with Abu Jasim
+          team: 2,
           avatar: '👵',
           score: 0,
         },
       ];
     } else {
-      // Pass & Play
+      setMyPlayerId('p0');
       initialPlayers = [
         {
           id: 'p0',
@@ -191,18 +285,17 @@ export const App: React.FC = () => {
 
     let boneyard: TileType[] = [];
 
-    // Deal 7 tiles to each player
     updatedPlayers.forEach((p, idx) => {
       p.hand = fullDeck.slice(idx * 7, (idx + 1) * 7);
     });
 
-    if (mode === '1v1' || mode === 'pass_play') {
+    if (mode === '1v1' || mode === 'pass_play' || mode === 'online') {
       boneyard = fullDeck.slice(14);
-    } // in 2v2 all 28 tiles dealt (4 * 7)
+    }
 
     const openingInfo = findOpeningPlayerIndex(updatedPlayers);
 
-    setGameState({
+    const initialRoundState: GameState = {
       mode,
       targetScore,
       players: updatedPlayers,
@@ -220,10 +313,20 @@ export const App: React.FC = () => {
       chatMessages: [],
       roundWinner: null,
       matchWinner: null,
-    });
+    };
+
+    setGameState(initialRoundState);
+
+    if (mode === 'online' && multiplayerManager.isHost) {
+      multiplayerManager.broadcastMessage('GAME_STATE_SYNC', initialRoundState);
+    }
   };
 
   const currentPlayer = gameState.players[gameState.currentTurnIndex];
+  const isMyTurn =
+    gameState.mode === 'online'
+      ? currentPlayer?.id === myPlayerId
+      : !currentPlayer?.isBot;
 
   // Get valid moves for current player
   const validMoves = currentPlayer
@@ -252,7 +355,6 @@ export const App: React.FC = () => {
     let newRightEnd = gameState.board.rightEnd;
 
     if (newLeftEnd === null || newRightEnd === null) {
-      // First tile on empty board
       newLeftEnd = tile.top;
       newRightEnd = tile.bottom;
     } else if (position === 'left') {
@@ -274,44 +376,43 @@ export const App: React.FC = () => {
         ? [newPlayedTile, ...gameState.board.tiles]
         : [...gameState.board.tiles, newPlayedTile];
 
-    // Remove tile from player hand
-    const updatedPlayers = gameState.players.map((p, idx) => {
-      if (idx === gameState.currentTurnIndex) {
-        return {
-          ...p,
-          hand: p.hand.filter((t) => t.id !== tile.id),
-          isPassed: false,
-        };
+    updateAndBroadcastState((prev) => {
+      const updatedPlayers = prev.players.map((p, idx) => {
+        if (idx === prev.currentTurnIndex) {
+          return {
+            ...p,
+            hand: p.hand.filter((t) => t.id !== tile.id),
+            isPassed: false,
+          };
+        }
+        return p;
+      });
+
+      const activeP = updatedPlayers[prev.currentTurnIndex];
+
+      if (activeP.hand.length === 0) {
+        handleRoundWin(activeP, 'domino', updatedPlayers);
+        return prev;
       }
-      return p;
+
+      const nextTurnIndex = (prev.currentTurnIndex + 1) % prev.players.length;
+
+      return {
+        ...prev,
+        players: updatedPlayers,
+        currentTurnIndex: nextTurnIndex,
+        board: {
+          tiles: newBoardTiles,
+          leftEnd: newLeftEnd,
+          rightEnd: newRightEnd,
+        },
+        firstTilePlayed: true,
+        lastActionMessage: {
+          ar: `لعب ${activeP.nameAr} قطعة [${tile.top}|${tile.bottom}]`,
+          en: `${activeP.name} played tile [${tile.top}|${tile.bottom}]`,
+        },
+      };
     });
-
-    const activeP = updatedPlayers[gameState.currentTurnIndex];
-
-    // Check if player won round (Domino!)
-    if (activeP.hand.length === 0) {
-      handleRoundWin(activeP, 'domino', updatedPlayers);
-      return;
-    }
-
-    // Advance turn to next player
-    const nextTurnIndex = (gameState.currentTurnIndex + 1) % gameState.players.length;
-
-    setGameState((prev) => ({
-      ...prev,
-      players: updatedPlayers,
-      currentTurnIndex: nextTurnIndex,
-      board: {
-        tiles: newBoardTiles,
-        leftEnd: newLeftEnd,
-        rightEnd: newRightEnd,
-      },
-      firstTilePlayed: true,
-      lastActionMessage: {
-        ar: `لعب ${activeP.nameAr} قطعة [${tile.top}|${tile.bottom}]`,
-        en: `${activeP.name} played tile [${tile.top}|${tile.bottom}]`,
-      },
-    }));
 
     setSelectedTile(null);
   };
@@ -321,60 +422,76 @@ export const App: React.FC = () => {
     if (gameState.boneyard.length === 0) return;
 
     soundEngine.playTileShuffle();
-    const drawnTile = gameState.boneyard[0];
-    const newBoneyard = gameState.boneyard.slice(1);
 
-    const updatedPlayers = gameState.players.map((p, idx) => {
-      if (idx === gameState.currentTurnIndex) {
-        return { ...p, hand: [...p.hand, drawnTile] };
-      }
-      return p;
+    if (gameState.mode === 'online' && !multiplayerManager.isHost) {
+      multiplayerManager.broadcastMessage('DRAW_TILE_ACTION', {});
+      return;
+    }
+
+    updateAndBroadcastState((prev) => {
+      const drawnTile = prev.boneyard[0];
+      const newBoneyard = prev.boneyard.slice(1);
+
+      const updatedPlayers = prev.players.map((p, idx) => {
+        if (idx === prev.currentTurnIndex) {
+          return { ...p, hand: [...p.hand, drawnTile] };
+        }
+        return p;
+      });
+
+      return {
+        ...prev,
+        players: updatedPlayers,
+        boneyard: newBoneyard,
+        lastActionMessage: {
+          ar: `سحب ${currentPlayer.nameAr} قطعة من الخزنة`,
+          en: `${currentPlayer.name} drew a tile from boneyard`,
+        },
+      };
     });
-
-    setGameState((prev) => ({
-      ...prev,
-      players: updatedPlayers,
-      boneyard: newBoneyard,
-      lastActionMessage: {
-        ar: `سحب ${currentPlayer.nameAr} قطعة من الخزنة`,
-        en: `${currentPlayer.name} drew a tile from boneyard`,
-      },
-    }));
   };
 
   // Handle Player Passing Turn
   const handlePassTurn = () => {
     soundEngine.playPassSound();
 
-    const updatedPlayers = gameState.players.map((p, idx) => {
-      if (idx === gameState.currentTurnIndex) {
-        return { ...p, isPassed: true };
-      }
-      return p;
-    });
-
-    // Check if all players passed (Locked Board / القفلة)
-    const allPassed = updatedPlayers.every((p) => p.isPassed || getValidMoves(p.hand, gameState.board.leftEnd, gameState.board.rightEnd).length === 0);
-
-    if (allPassed && gameState.board.tiles.length > 0) {
-      handleBlockedGame(updatedPlayers);
+    if (gameState.mode === 'online' && !multiplayerManager.isHost) {
+      multiplayerManager.broadcastMessage('PASS_TURN_ACTION', {});
       return;
     }
 
-    const nextTurnIndex = (gameState.currentTurnIndex + 1) % gameState.players.length;
+    updateAndBroadcastState((prev) => {
+      const updatedPlayers = prev.players.map((p, idx) => {
+        if (idx === prev.currentTurnIndex) {
+          return { ...p, isPassed: true };
+        }
+        return p;
+      });
 
-    setGameState((prev) => ({
-      ...prev,
-      players: updatedPlayers,
-      currentTurnIndex: nextTurnIndex,
-      lastActionMessage: {
-        ar: `مرر ${currentPlayer.nameAr} الدور (باص)`,
-        en: `${currentPlayer.name} passed turn`,
-      },
-    }));
+      const allPassed = updatedPlayers.every(
+        (p) => p.isPassed || getValidMoves(p.hand, prev.board.leftEnd, prev.board.rightEnd).length === 0
+      );
+
+      if (allPassed && prev.board.tiles.length > 0) {
+        handleBlockedGame(updatedPlayers);
+        return prev;
+      }
+
+      const nextTurnIndex = (prev.currentTurnIndex + 1) % prev.players.length;
+
+      return {
+        ...prev,
+        players: updatedPlayers,
+        currentTurnIndex: nextTurnIndex,
+        lastActionMessage: {
+          ar: `مرر ${currentPlayer.nameAr} الدور (باص)`,
+          en: `${currentPlayer.name} passed turn`,
+        },
+      };
+    });
   };
 
-  // Handle Round Win (Domino / تسكير)
+  // Handle Round Win
   const handleRoundWin = (
     winnerPlayer: Player,
     reason: 'domino' | 'blocked',
@@ -394,19 +511,15 @@ export const App: React.FC = () => {
     if (gameState.mode === '2v2') {
       const winningTeam = winnerPlayer.team;
       const opposingTeam = winningTeam === 1 ? 2 : 1;
-      const oppPips = currentPlayers
+      pointsGained = currentPlayers
         .filter((p) => p.team === opposingTeam)
         .reduce((sum, p) => sum + pipCounts[p.id], 0);
-
-      pointsGained = oppPips;
     } else {
-      // 1v1 or pass & play: sum of opponent remaining pips
       pointsGained = currentPlayers
         .filter((p) => p.id !== winnerPlayer.id)
         .reduce((sum, p) => sum + pipCounts[p.id], 0);
     }
 
-    // Award points to winner / winning team
     const updatedPlayers = currentPlayers.map((p) => {
       if (
         (gameState.mode === '2v2' && p.team === winnerPlayer.team) ||
@@ -417,12 +530,11 @@ export const App: React.FC = () => {
       return p;
     });
 
-    // Check if match won (target score reached)
     const matchWinnerPlayer = updatedPlayers.find(
       (p) => p.score >= gameState.targetScore
     );
 
-    setGameState((prev) => ({
+    updateAndBroadcastState((prev) => ({
       ...prev,
       players: updatedPlayers,
       status: matchWinnerPlayer ? 'match_ended' : 'round_ended',
@@ -437,7 +549,7 @@ export const App: React.FC = () => {
     }));
   };
 
-  // Handle Blocked Game (القفلة / قفل)
+  // Handle Blocked Game
   const handleBlockedGame = (currentPlayers: Player[]) => {
     soundEngine.playBlockSound();
     soundEngine.speakIraqiPhrase('قفلت الجلسة! نحسب الخرز!');
@@ -485,7 +597,6 @@ export const App: React.FC = () => {
       );
 
       if (botMove) {
-        // Trigger bot dialogue bubble & Iraqi voice
         const randDialogue =
           BOT_DIALOGUES_PLAY[Math.floor(Math.random() * BOT_DIALOGUES_PLAY.length)];
         setActiveBotDialogue({
@@ -548,12 +659,30 @@ export const App: React.FC = () => {
 
     if (!tileToPlay) return;
 
-    // Verify move validity for position
+    if (gameState.mode === 'online' && !multiplayerManager.isHost) {
+      multiplayerManager.broadcastMessage('PLAY_TILE_ACTION', {
+        tile: tileToPlay,
+        position,
+      });
+      setSelectedTile(null);
+      return;
+    }
+
     const movesForTile = validMoves.filter((m) => m.tile.id === tileToPlay!.id);
     if (movesForTile.some((m) => m.position === position || m.position === 'first')) {
       executePlayTile(tileToPlay, position);
     }
   };
+
+  const copyRoomCode = () => {
+    if (onlineRoomCode) {
+      navigator.clipboard.writeText(onlineRoomCode);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    }
+  };
+
+  const myPlayerObject = gameState.players.find((p) => p.id === myPlayerId) || currentPlayer;
 
   return (
     <div className="chaikhana-app">
@@ -573,10 +702,21 @@ export const App: React.FC = () => {
           <div className="brand-title">
             <span>🀏</span>
             <span>{language === 'ar' ? 'دومينو الشايخانة' : 'Chaikhana Dominoes'}</span>
+
+            {/* Online Room Code Banner */}
+            {gameState.mode === 'online' && onlineRoomCode && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(229,184,66,0.2)', padding: '4px 10px', borderRadius: '12px', border: '1px solid var(--gold-accent)', fontSize: '0.85rem' }}>
+                <Users size={16} />
+                <span>{language === 'ar' ? 'رمز الغرفة:' : 'Room Code:'}</span>
+                <strong style={{ color: '#ffd700', letterSpacing: '1px' }}>{onlineRoomCode}</strong>
+                <button className="icon-btn" onClick={copyRoomCode} style={{ padding: '2px 6px', fontSize: '0.75rem' }}>
+                  {copiedCode ? <Check size={14} color="#4ef037" /> : <Copy size={14} />}
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="header-actions">
-            {/* Ambient Cafe Soundscape Toggle */}
             <button
               className={`icon-btn ${ambientActive ? 'active-ambient' : ''}`}
               onClick={toggleAmbientSound}
@@ -609,13 +749,23 @@ export const App: React.FC = () => {
 
             <button
               className="icon-btn"
-              onClick={() => setGameState((prev) => ({ ...prev, status: 'lobby' }))}
+              onClick={() => {
+                multiplayerManager.destroy();
+                setGameState((prev) => ({ ...prev, status: 'lobby' }));
+              }}
             >
               <Home size={18} />
               {language === 'ar' ? 'الرئيسية' : 'Lobby'}
             </button>
           </div>
         </div>
+
+        {/* Online Status Toast */}
+        {onlineStatusText && gameState.mode === 'online' && (
+          <div style={{ background: 'rgba(0,0,0,0.85)', color: 'var(--gold-accent)', padding: '6px 14px', borderRadius: '20px', border: '1px solid var(--gold-accent)', fontSize: '0.85rem', position: 'absolute', top: '70px', right: '20px', zIndex: 30 }}>
+            {onlineStatusText}
+          </div>
+        )}
 
         {/* Iraqi Bot Speech Bubble */}
         {activeBotDialogue && (
@@ -658,18 +808,17 @@ export const App: React.FC = () => {
         <IstikanTeaComponent language={language} />
 
         {/* Bottom Player Hand Bar */}
-        {currentPlayer && gameState.status === 'playing' && (
+        {myPlayerObject && gameState.status === 'playing' && (
           <HandComponent
-            player={currentPlayer}
-            isCurrentTurn={!currentPlayer.isBot}
+            player={myPlayerObject}
+            isCurrentTurn={isMyTurn}
             selectedTile={selectedTile}
-            playableTiles={playableTiles}
+            playableTiles={isMyTurn ? playableTiles : []}
             onDragStartTile={(tile) => setSelectedTile(tile)}
             onSelectTile={(tile) => {
               const moves = validMoves.filter((m) => m.tile.id === tile.id);
               if (moves.length === 1) {
-                // Auto play if only 1 position option
-                executePlayTile(tile, moves[0].position);
+                handleTilePlacementAction(moves[0].position);
               } else {
                 setSelectedTile(tile);
               }
@@ -677,18 +826,18 @@ export const App: React.FC = () => {
             onDrawTile={handleDrawTile}
             onPassTurn={handlePassTurn}
             onSortHand={() => {
-              const sorted = [...currentPlayer.hand].sort(
+              const sorted = [...myPlayerObject.hand].sort(
                 (a, b) => b.top + b.bottom - (a.top + a.bottom)
               );
               setGameState((prev) => ({
                 ...prev,
-                players: prev.players.map((p, idx) =>
-                  idx === prev.currentTurnIndex ? { ...p, hand: sorted } : p
+                players: prev.players.map((p) =>
+                  p.id === myPlayerObject.id ? { ...p, hand: sorted } : p
                 ),
               }));
             }}
-            canDraw={playableTiles.length === 0 && gameState.boneyard.length > 0}
-            canPass={playableTiles.length === 0 && gameState.boneyard.length === 0}
+            canDraw={isMyTurn && playableTiles.length === 0 && gameState.boneyard.length > 0}
+            canPass={isMyTurn && playableTiles.length === 0 && gameState.boneyard.length === 0}
             boneyardCount={gameState.boneyard.length}
             language={language}
           />
