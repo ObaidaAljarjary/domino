@@ -489,71 +489,69 @@ export const App: React.FC = () => {
       soundEngine.speakIraqiPhrase('دوش عراقي!');
     }
 
-    let newLeftEnd = gameState.board.leftEnd;
-    let newRightEnd = gameState.board.rightEnd;
-    let displayTop = tile.top;
-    let displayBottom = tile.bottom;
-    let matchingEndVal = 0;
-
-    if (newLeftEnd === null || newRightEnd === null) {
-      newLeftEnd = tile.top;
-      newRightEnd = tile.bottom;
-      displayTop = tile.top;
-      displayBottom = tile.bottom;
-      matchingEndVal = tile.top;
-    } else if (position === 'left' || position === 'first') {
-      const L = newLeftEnd;
-      matchingEndVal = L;
-
-      if (tile.top === L) {
-        newLeftEnd = tile.bottom;
-        displayTop = tile.bottom;
-        displayBottom = tile.top;
-      } else if (tile.bottom === L) {
-        newLeftEnd = tile.top;
-        displayTop = tile.top;
-        displayBottom = tile.bottom;
-      } else {
-        soundEngine.playPassSound();
-        return;
-      }
-    } else if (position === 'right') {
-      const R = newRightEnd;
-      matchingEndVal = R;
-
-      if (tile.top === R) {
-        newRightEnd = tile.bottom;
-        displayTop = tile.top;
-        displayBottom = tile.bottom;
-      } else if (tile.bottom === R) {
-        newRightEnd = tile.top;
-        displayTop = tile.bottom;
-        displayBottom = tile.top;
-      } else {
-        soundEngine.playPassSound();
-        return;
-      }
-    }
-
     soundEngine.playTileSlam();
     setLastPlayedTileId(tile.id);
 
-    const newPlayedTile: PlayedTile = {
-      tile,
-      isDouble,
-      position,
-      orientation: isDouble ? 'vertical' : 'horizontal',
-      displayTop,
-      displayBottom,
-      matchingEndVal,
-    };
-
-    const newBoardTiles =
-      position === 'left'
-        ? [newPlayedTile, ...gameState.board.tiles]
-        : [...gameState.board.tiles, newPlayedTile];
-
     updateAndBroadcastState((prev) => {
+      let newLeftEnd = prev.board.leftEnd;
+      let newRightEnd = prev.board.rightEnd;
+      let displayTop = tile.top;
+      let displayBottom = tile.bottom;
+      let matchingEndVal = 0;
+
+      if (newLeftEnd === null || newRightEnd === null) {
+        newLeftEnd = tile.top;
+        newRightEnd = tile.bottom;
+        displayTop = tile.top;
+        displayBottom = tile.bottom;
+        matchingEndVal = tile.top;
+      } else if (position === 'left' || position === 'first') {
+        const L = newLeftEnd;
+        matchingEndVal = L;
+
+        if (tile.top === L) {
+          newLeftEnd = tile.bottom;
+          displayTop = tile.bottom;
+          displayBottom = tile.top;
+        } else if (tile.bottom === L) {
+          newLeftEnd = tile.top;
+          displayTop = tile.top;
+          displayBottom = tile.bottom;
+        } else {
+          return prev;
+        }
+      } else if (position === 'right') {
+        const R = newRightEnd;
+        matchingEndVal = R;
+
+        if (tile.top === R) {
+          newRightEnd = tile.bottom;
+          displayTop = tile.top;
+          displayBottom = tile.bottom;
+        } else if (tile.bottom === R) {
+          newRightEnd = tile.top;
+          displayTop = tile.bottom;
+          displayBottom = tile.top;
+        } else {
+          return prev;
+        }
+      }
+
+      const newPlayedTile: PlayedTile = {
+        tile,
+        isDouble,
+        position,
+        orientation: isDouble ? 'vertical' : 'horizontal',
+        displayTop,
+        displayBottom,
+        matchingEndVal,
+      };
+
+      const newBoardTiles =
+        position === 'left'
+          ? [newPlayedTile, ...prev.board.tiles]
+          : [...prev.board.tiles, newPlayedTile];
+
       const updatedPlayers = prev.players.map((p, idx) => {
         if (idx === prev.currentTurnIndex) {
           return {
@@ -568,7 +566,7 @@ export const App: React.FC = () => {
       const activeP = updatedPlayers[prev.currentTurnIndex];
 
       if (activeP.hand.length === 0) {
-        handleRoundWin(activeP, 'domino', updatedPlayers);
+        setTimeout(() => handleRoundWin(activeP, 'domino', updatedPlayers), 0);
         return prev;
       }
 
@@ -616,13 +614,15 @@ export const App: React.FC = () => {
         return p;
       });
 
+      const activeP = updatedPlayers[prev.currentTurnIndex];
+
       return {
         ...prev,
         players: updatedPlayers,
         boneyard: newBoneyard,
         lastActionMessage: {
-          ar: `سحب ${currentPlayer.nameAr} قطعة من الخزنة`,
-          en: `${currentPlayer.name} drew a tile from boneyard`,
+          ar: `سحب ${activeP.nameAr} قطعة من الخزنة`,
+          en: `${activeP.name} drew a tile from boneyard`,
         },
       };
     });
@@ -645,12 +645,14 @@ export const App: React.FC = () => {
         return p;
       });
 
+      const activeP = updatedPlayers[prev.currentTurnIndex];
+
       const allPassed = updatedPlayers.every(
         (p) => p.isPassed || getValidMoves(p.hand, prev.board.leftEnd, prev.board.rightEnd).length === 0
       );
 
       if (allPassed && prev.board.tiles.length > 0) {
-        handleBlockedGame(updatedPlayers);
+        setTimeout(() => handleBlockedGame(updatedPlayers), 0);
         return prev;
       }
 
@@ -661,8 +663,8 @@ export const App: React.FC = () => {
         players: updatedPlayers,
         currentTurnIndex: nextTurnIndex,
         lastActionMessage: {
-          ar: `مرر ${currentPlayer.nameAr} الدور (باص)`,
-          en: `${currentPlayer.name} passed turn`,
+          ar: `مرر ${activeP.nameAr} الدور (باص)`,
+          en: `${activeP.name} passed turn`,
         },
       };
     });
