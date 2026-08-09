@@ -10,9 +10,9 @@ export interface PlayedTile {
   tile: Tile;
   isDouble: boolean;
   position: PlayPosition;
-  // Orientation relative to line of play: 'horizontal' or 'vertical'
   orientation: 'horizontal' | 'vertical';
-  // Matching end values
+  displayTop: number;
+  displayBottom: number;
   matchingEndVal: number;
 }
 

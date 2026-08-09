@@ -86,7 +86,6 @@ export const App: React.FC = () => {
       if (msg.type === 'GAME_STATE_SYNC') {
         setGameState(msg.payload);
       } else if (msg.type === 'JOIN_ROOM' && multiplayerManager.isHost) {
-        // Guest joined room! Update Guest player name
         const guestName = msg.senderName || 'Guest';
         setGameState((prev) => {
           const updatedPlayers = prev.players.map((p) =>
@@ -342,10 +341,8 @@ export const App: React.FC = () => {
     .map((id) => currentPlayer?.hand.find((t) => t.id === id))
     .filter(Boolean) as TileType[];
 
-  // Execute playing a tile onto board
+  // Execute playing a tile onto board with STRICT matching validation & visual alignment
   const executePlayTile = (tile: TileType, position: PlayPosition) => {
-    soundEngine.playTileSlam();
-
     const isDouble = isDoubleTile(tile);
     if (isDouble && tile.top === 6) {
       soundEngine.speakIraqiPhrase('دوش عراقي!');
@@ -353,22 +350,67 @@ export const App: React.FC = () => {
 
     let newLeftEnd = gameState.board.leftEnd;
     let newRightEnd = gameState.board.rightEnd;
+    let displayTop = tile.top;
+    let displayBottom = tile.bottom;
+    let matchingEndVal = 0;
 
     if (newLeftEnd === null || newRightEnd === null) {
+      // First tile played on empty board
       newLeftEnd = tile.top;
       newRightEnd = tile.bottom;
-    } else if (position === 'left') {
-      newLeftEnd = tile.top === newLeftEnd ? tile.bottom : tile.top;
+      displayTop = tile.top;
+      displayBottom = tile.bottom;
+      matchingEndVal = tile.top;
+    } else if (position === 'left' || position === 'first') {
+      const L = newLeftEnd;
+      matchingEndVal = L;
+
+      if (tile.top === L) {
+        // Matching end is tile.top. Exposed new left end is tile.bottom.
+        newLeftEnd = tile.bottom;
+        displayTop = tile.bottom; // Facing left
+        displayBottom = tile.top;  // Touching existing chain (L)
+      } else if (tile.bottom === L) {
+        // Matching end is tile.bottom. Exposed new left end is tile.top.
+        newLeftEnd = tile.top;
+        displayTop = tile.top;     // Facing left
+        displayBottom = tile.bottom; // Touching existing chain (L)
+      } else {
+        // Strict Validation: Tile does NOT match left end! Reject move.
+        soundEngine.playPassSound();
+        return;
+      }
     } else if (position === 'right') {
-      newRightEnd = tile.top === newRightEnd ? tile.bottom : tile.top;
+      const R = newRightEnd;
+      matchingEndVal = R;
+
+      if (tile.top === R) {
+        // Matching end is tile.top. Exposed new right end is tile.bottom.
+        newRightEnd = tile.bottom;
+        displayTop = tile.top;       // Touching existing chain (R)
+        displayBottom = tile.bottom; // Facing right
+      } else if (tile.bottom === R) {
+        // Matching end is tile.bottom. Exposed new right end is tile.top.
+        newRightEnd = tile.top;
+        displayTop = tile.bottom;    // Touching existing chain (R)
+        displayBottom = tile.top;    // Facing right
+      } else {
+        // Strict Validation: Tile does NOT match right end! Reject move.
+        soundEngine.playPassSound();
+        return;
+      }
     }
+
+    soundEngine.playTileSlam();
 
     const newPlayedTile: PlayedTile = {
       tile,
       isDouble,
       position,
       orientation: isDouble ? 'vertical' : 'horizontal',
-      matchingEndVal: position === 'left' ? gameState.board.leftEnd || 0 : gameState.board.rightEnd || 0,
+      displayTop,
+      displayBottom,
+      matchingEndVal,
     };
 
     const newBoardTiles =
@@ -668,6 +710,7 @@ export const App: React.FC = () => {
       return;
     }
 
+    // Verify move validity for position
     const movesForTile = validMoves.filter((m) => m.tile.id === tileToPlay!.id);
     if (movesForTile.some((m) => m.position === position || m.position === 'first')) {
       executePlayTile(tileToPlay, position);

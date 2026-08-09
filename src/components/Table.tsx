@@ -48,7 +48,6 @@ export const TableComponent: React.FC<TableProps> = ({
         onDragLeave={() => setIsDragOverCenter(false)}
         onDrop={(e) => handleDrop(e, 'first')}
       >
-        {/* Traditional Iraqi Arabesque Ornament Background Frame */}
         <div className="iraqi-ornament-center-motif" />
 
         <div className="empty-board-box">
@@ -78,7 +77,7 @@ export const TableComponent: React.FC<TableProps> = ({
       <div className="iraqi-ornament-corner bottom-right" />
 
       <div className="snake-container centered-snake-wrapper">
-        {/* Left Placement Target / Drop Zone */}
+        {/* Left Placement Target */}
         <div
           className={`drop-zone-wrapper ${showLeftTarget ? 'visible' : ''} ${
             isDragOverLeft ? 'drag-over' : ''
@@ -99,11 +98,13 @@ export const TableComponent: React.FC<TableProps> = ({
           <TileComponent
             key={`${played.tile.id}-${idx}`}
             tile={played.tile}
+            displayTopVal={played.displayTop}
+            displayBottomVal={played.displayBottom}
             orientation={played.isDouble ? 'vertical' : 'horizontal'}
           />
         ))}
 
-        {/* Right Placement Target / Drop Zone */}
+        {/* Right Placement Target */}
         <div
           className={`drop-zone-wrapper ${showRightTarget ? 'visible' : ''} ${
             isDragOverRight ? 'drag-over' : ''

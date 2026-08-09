@@ -3,6 +3,8 @@ import type { Tile as TileType } from '../types/domino';
 
 interface TileProps {
   tile: TileType;
+  displayTopVal?: number;
+  displayBottomVal?: number;
   orientation?: 'vertical' | 'horizontal';
   isPlayable?: boolean;
   onClick?: () => void;
@@ -14,6 +16,8 @@ interface TileProps {
 
 export const TileComponent: React.FC<TileProps> = ({
   tile,
+  displayTopVal,
+  displayBottomVal,
   orientation = 'vertical',
   isPlayable = false,
   onClick,
@@ -23,6 +27,9 @@ export const TileComponent: React.FC<TileProps> = ({
   faceDown = false,
 }) => {
   const isHorizontal = orientation === 'horizontal';
+
+  const topVal = displayTopVal !== undefined ? displayTopVal : tile.top;
+  const bottomVal = displayBottomVal !== undefined ? displayBottomVal : tile.bottom;
 
   // Helper to render pips for a half (0 to 6)
   const renderPips = (val: number) => {
@@ -80,13 +87,13 @@ export const TileComponent: React.FC<TileProps> = ({
         if (!disabled && onClick) onClick();
       }}
     >
-      <div className="tile-half">{renderPips(tile.top)}</div>
+      <div className="tile-half">{renderPips(topVal)}</div>
 
       <div className={isHorizontal ? 'tile-divider-horizontal' : 'tile-divider-vertical'}>
         <div className="brass-pin" />
       </div>
 
-      <div className="tile-half">{renderPips(tile.bottom)}</div>
+      <div className="tile-half">{renderPips(bottomVal)}</div>
     </div>
   );
 };
