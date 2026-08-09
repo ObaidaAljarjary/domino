@@ -25,7 +25,7 @@ import { IstikanTeaComponent } from './components/IstikanTea';
 import { ScoreBoardComponent } from './components/ScoreBoard';
 import { BotBannerComponent } from './components/BotBanner';
 import { LobbyComponent } from './components/Lobby';
-import { Volume2, VolumeX, RotateCcw, Home, Sparkles } from 'lucide-react';
+import { Volume2, VolumeX, RotateCcw, Home, Sparkles, Radio } from 'lucide-react';
 import './styles/chaikhana.css';
 
 const BOT_DIALOGUES_PLAY = [
@@ -43,6 +43,7 @@ const BOT_DIALOGUES_PASS = [
 export const App: React.FC = () => {
   const [language, setLanguage] = useState<Language>('ar');
   const [soundMuted, setSoundMuted] = useState(false);
+  const [ambientActive, setAmbientActive] = useState(false);
   const [selectedTile, setSelectedTile] = useState<TileType | null>(null);
   const [activeBotDialogue, setActiveBotDialogue] = useState<{
     botNameAr: string;
@@ -243,6 +244,10 @@ export const App: React.FC = () => {
     soundEngine.playTileSlam();
 
     const isDouble = isDoubleTile(tile);
+    if (isDouble && tile.top === 6) {
+      soundEngine.speakIraqiPhrase('دوش عراقي!');
+    }
+
     let newLeftEnd = gameState.board.leftEnd;
     let newRightEnd = gameState.board.rightEnd;
 
@@ -376,6 +381,7 @@ export const App: React.FC = () => {
     currentPlayers: Player[]
   ) => {
     soundEngine.playWinJingle();
+    soundEngine.speakIraqiPhrase('عاشت الأيادي! خلصت الجلسة!');
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
 
     let pointsGained = 0;
@@ -434,6 +440,7 @@ export const App: React.FC = () => {
   // Handle Blocked Game (القفلة / قفل)
   const handleBlockedGame = (currentPlayers: Player[]) => {
     soundEngine.playBlockSound();
+    soundEngine.speakIraqiPhrase('قفلت الجلسة! نحسب الخرز!');
 
     const pipCounts: { [id: string]: number } = {};
     currentPlayers.forEach((p) => {
@@ -478,7 +485,7 @@ export const App: React.FC = () => {
       );
 
       if (botMove) {
-        // Trigger bot dialogue bubble
+        // Trigger bot dialogue bubble & Iraqi voice
         const randDialogue =
           BOT_DIALOGUES_PLAY[Math.floor(Math.random() * BOT_DIALOGUES_PLAY.length)];
         setActiveBotDialogue({
@@ -488,6 +495,10 @@ export const App: React.FC = () => {
           messageAr: randDialogue.ar,
           messageEn: randDialogue.en,
         });
+
+        if (Math.random() < 0.4) {
+          soundEngine.speakIraqiPhrase(randDialogue.ar);
+        }
 
         setTimeout(() => {
           setActiveBotDialogue(null);
@@ -521,6 +532,11 @@ export const App: React.FC = () => {
   const toggleSound = () => {
     soundEngine.soundEnabled = !soundMuted;
     setSoundMuted(!soundMuted);
+  };
+
+  const toggleAmbientSound = () => {
+    const isActive = soundEngine.toggleAmbientSoundscape();
+    setAmbientActive(isActive);
   };
 
   const handleTilePlacementAction = (position: PlayPosition, droppedTileId?: string) => {
@@ -560,6 +576,25 @@ export const App: React.FC = () => {
           </div>
 
           <div className="header-actions">
+            {/* Ambient Cafe Soundscape Toggle */}
+            <button
+              className={`icon-btn ${ambientActive ? 'active-ambient' : ''}`}
+              onClick={toggleAmbientSound}
+              style={{
+                borderColor: ambientActive ? '#4ef037' : 'var(--gold-accent)',
+                boxShadow: ambientActive ? '0 0 10px rgba(78, 240, 55, 0.6)' : 'none',
+              }}
+            >
+              <Radio size={18} color={ambientActive ? '#4ef037' : '#fff'} />
+              {language === 'ar'
+                ? ambientActive
+                  ? 'أصوات الشارع 🔊'
+                  : 'أجواء الشايخانة 🫖'
+                : ambientActive
+                ? 'Ambient ON 🔊'
+                : 'Cafe Vibe 🫖'}
+            </button>
+
             <button className="icon-btn" onClick={toggleSound}>
               {soundMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
               {language === 'ar' ? (soundMuted ? 'كتم' : 'صوت') : soundMuted ? 'Muted' : 'Sound'}
