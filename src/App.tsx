@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import type {
   GameState,
@@ -8,6 +8,7 @@ import type {
   Tile as TileType,
   PlayPosition,
   PlayedTile,
+  ChatMessage,
 } from './types/domino';
 import {
   generateFullDeck,
