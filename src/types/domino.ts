@@ -22,10 +22,11 @@ export interface Player {
   nameAr: string;
   hand: Tile[];
   isBot: boolean;
-  team: 1 | 2 | 3 | 4; // 2v2 uses 1 & 2; FFA uses 1, 2, 3, 4
+  team: 1 | 2 | 3 | 4;
   avatar: string;
   score: number;
   isPassed?: boolean;
+  isConnected?: boolean;
 }
 
 export type GameMode = '1v1' | '3_ffa' | '2v2' | '4_ffa' | 'pass_play' | 'online';
@@ -55,7 +56,7 @@ export interface GameState {
   currentTurnIndex: number;
   board: GameBoard;
   boneyard: Tile[];
-  status: 'lobby' | 'playing' | 'round_ended' | 'match_ended';
+  status: 'lobby' | 'waiting' | 'playing' | 'round_ended' | 'match_ended';
   roundNumber: number;
   openingPlayerIndex: number;
   firstTilePlayed: boolean;

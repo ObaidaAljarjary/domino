@@ -26,6 +26,7 @@ import { IstikanTeaComponent } from './components/IstikanTea';
 import { ScoreBoardComponent } from './components/ScoreBoard';
 import { BotBannerComponent } from './components/BotBanner';
 import { LobbyComponent } from './components/Lobby';
+import { WaitingRoomComponent } from './components/WaitingRoom';
 import { Volume2, VolumeX, RotateCcw, Home, Sparkles, Radio, Copy, Check, Users } from 'lucide-react';
 import './styles/chaikhana.css';
 
@@ -93,9 +94,7 @@ export const App: React.FC = () => {
       } else if (msg.type === 'JOIN_ROOM' && multiplayerManager.isHost) {
         const guestName = msg.senderName || 'Guest';
         setGameState((prev) => {
-          const emptySlotIndex = prev.players.findIndex(
-            (p) => p.isBot && p.name.includes('Waiting')
-          );
+          const emptySlotIndex = prev.players.findIndex((p) => !p.isConnected);
           let updatedPlayers = [...prev.players];
           let assignedSlotId = 'p1';
 
@@ -106,20 +105,8 @@ export const App: React.FC = () => {
               name: guestName,
               nameAr: guestName,
               isBot: false,
+              isConnected: true,
             };
-          } else {
-            const nextIdx = prev.players.length;
-            assignedSlotId = `p${nextIdx}`;
-            updatedPlayers.push({
-              id: assignedSlotId,
-              name: guestName,
-              nameAr: guestName,
-              hand: [],
-              isBot: false,
-              team: (nextIdx + 1) as 1 | 2 | 3 | 4,
-              avatar: '👨‍🦱',
-              score: 0,
-            });
           }
 
           const newState = { ...prev, players: updatedPlayers };
@@ -194,6 +181,7 @@ export const App: React.FC = () => {
           nameAr: playerName,
           hand: [],
           isBot: false,
+          isConnected: true,
           team: 1,
           avatar: '🧔‍♂️',
           score: 0,
@@ -205,12 +193,34 @@ export const App: React.FC = () => {
             name: `Waiting for Player ${i + 1}...`,
             nameAr: `بانتظار انضمام اللاعب ${i + 1}...`,
             hand: [],
-            isBot: true,
+            isBot: false, // NOT a bot while waiting!
+            isConnected: false,
             team: (i + 1) as 1 | 2 | 3 | 4,
             avatar: i === 1 ? '👳‍♂️' : i === 2 ? '👴' : '👵',
             score: 0,
           });
         }
+
+        // Host enters waiting lobby
+        const waitingState: GameState = {
+          mode: 'online',
+          targetScore,
+          players: initialPlayers,
+          currentTurnIndex: 0,
+          board: { tiles: [], leftEnd: null, rightEnd: null },
+          boneyard: [],
+          status: 'waiting',
+          roundNumber: 1,
+          openingPlayerIndex: 0,
+          firstTilePlayed: false,
+          lastActionMessage: null,
+          chatMessages: [],
+          roundWinner: null,
+          matchWinner: null,
+        };
+
+        setGameState(waitingState);
+        return;
       }
     } else if (mode === '1v1') {
       setMyPlayerId('p0');
@@ -221,6 +231,7 @@ export const App: React.FC = () => {
           nameAr: playerName,
           hand: [],
           isBot: false,
+          isConnected: true,
           team: 1,
           avatar: '🧔‍♂️',
           score: 0,
@@ -231,6 +242,7 @@ export const App: React.FC = () => {
           nameAr: 'أبو جاسم',
           hand: [],
           isBot: true,
+          isConnected: true,
           team: 2,
           avatar: '👳‍♂️',
           score: 0,
@@ -245,6 +257,7 @@ export const App: React.FC = () => {
           nameAr: playerName,
           hand: [],
           isBot: false,
+          isConnected: true,
           team: 1,
           avatar: '🧔‍♂️',
           score: 0,
@@ -255,6 +268,7 @@ export const App: React.FC = () => {
           nameAr: 'أبو جاسم',
           hand: [],
           isBot: true,
+          isConnected: true,
           team: 2,
           avatar: '👳‍♂️',
           score: 0,
@@ -265,6 +279,7 @@ export const App: React.FC = () => {
           nameAr: 'الحجي أبو رعد',
           hand: [],
           isBot: true,
+          isConnected: true,
           team: 3,
           avatar: '👴',
           score: 0,
@@ -279,6 +294,7 @@ export const App: React.FC = () => {
           nameAr: playerName,
           hand: [],
           isBot: false,
+          isConnected: true,
           team: 1,
           avatar: '🧔‍♂️',
           score: 0,
@@ -289,6 +305,7 @@ export const App: React.FC = () => {
           nameAr: 'أبو جاسم',
           hand: [],
           isBot: true,
+          isConnected: true,
           team: 2,
           avatar: '👳‍♂️',
           score: 0,
@@ -299,6 +316,7 @@ export const App: React.FC = () => {
           nameAr: 'الحجي أبو رعد',
           hand: [],
           isBot: true,
+          isConnected: true,
           team: 1,
           avatar: '👴',
           score: 0,
@@ -309,6 +327,7 @@ export const App: React.FC = () => {
           nameAr: 'أم فهد',
           hand: [],
           isBot: true,
+          isConnected: true,
           team: 2,
           avatar: '👵',
           score: 0,
@@ -323,6 +342,7 @@ export const App: React.FC = () => {
           nameAr: playerName,
           hand: [],
           isBot: false,
+          isConnected: true,
           team: 1,
           avatar: '🧔‍♂️',
           score: 0,
@@ -333,6 +353,7 @@ export const App: React.FC = () => {
           nameAr: 'أبو جاسم',
           hand: [],
           isBot: true,
+          isConnected: true,
           team: 2,
           avatar: '👳‍♂️',
           score: 0,
@@ -343,6 +364,7 @@ export const App: React.FC = () => {
           nameAr: 'الحجي أبو رعد',
           hand: [],
           isBot: true,
+          isConnected: true,
           team: 3,
           avatar: '👴',
           score: 0,
@@ -353,6 +375,7 @@ export const App: React.FC = () => {
           nameAr: 'أم فهد',
           hand: [],
           isBot: true,
+          isConnected: true,
           team: 4,
           avatar: '👵',
           score: 0,
@@ -367,6 +390,7 @@ export const App: React.FC = () => {
           nameAr: `${playerName} 1`,
           hand: [],
           isBot: false,
+          isConnected: true,
           team: 1,
           avatar: '🧔‍♂️',
           score: 0,
@@ -377,6 +401,7 @@ export const App: React.FC = () => {
           nameAr: 'اللاعب 2',
           hand: [],
           isBot: false,
+          isConnected: true,
           team: 2,
           avatar: '👨‍🦱',
           score: 0,
@@ -385,6 +410,25 @@ export const App: React.FC = () => {
     }
 
     startNewRound(mode, initialPlayers, targetScore, 1);
+  };
+
+  // Launch Game from Online Waiting Room
+  const handleHostLaunchOnlineMatch = () => {
+    // Fill any disconnected slots with AI Bots
+    const finalPlayers = gameState.players.map((p, idx) => {
+      if (!p.isConnected) {
+        return {
+          ...p,
+          name: idx === 1 ? 'Abu Jasim Bot' : idx === 2 ? 'Hajji Raad Bot' : 'Um Fahad Bot',
+          nameAr: idx === 1 ? 'البوت أبو جاسم' : idx === 2 ? 'البوت أبو رعد' : 'البوت أم فهد',
+          isBot: true,
+          isConnected: true,
+        };
+      }
+      return p;
+    });
+
+    startNewRound('online', finalPlayers, gameState.targetScore, 1);
   };
 
   // Start New Round
@@ -414,6 +458,10 @@ export const App: React.FC = () => {
       boneyard = fullDeck.slice(14);
     } else if (mode === '3_ffa') {
       boneyard = fullDeck.slice(21);
+    } else if (mode === 'online') {
+      if (updatedPlayers.length === 2) boneyard = fullDeck.slice(14);
+      else if (updatedPlayers.length === 3) boneyard = fullDeck.slice(21);
+      else boneyard = [];
     } else {
       boneyard = [];
     }
@@ -744,7 +792,7 @@ export const App: React.FC = () => {
     handleRoundWin(winningPlayer, 'blocked', currentPlayers);
   };
 
-  // Bot Turn Automation Effect
+  // Bot Turn Automation Effect (ONLY fires during 'playing' status for actual bots!)
   useEffect(() => {
     if (gameState.status !== 'playing') return;
     if (!currentPlayer || !currentPlayer.isBot) return;
@@ -857,6 +905,17 @@ export const App: React.FC = () => {
         />
       )}
 
+      {/* Online Waiting Room Overlay */}
+      {gameState.status === 'waiting' && onlineRoomCode && (
+        <WaitingRoomComponent
+          roomCode={onlineRoomCode}
+          players={gameState.players}
+          isHost={multiplayerManager.isHost}
+          onStartMatch={handleHostLaunchOnlineMatch}
+          language={language}
+        />
+      )}
+
       {/* Main Game Interface */}
       <div className="chaikhana-table-container">
         {/* Top Header Controls */}
@@ -942,7 +1001,7 @@ export const App: React.FC = () => {
         )}
 
         {/* Score Ledger Notebook */}
-        {gameState.status !== 'lobby' && (
+        {gameState.status !== 'lobby' && gameState.status !== 'waiting' && (
           <ScoreBoardComponent
             players={gameState.players}
             targetScore={gameState.targetScore}
