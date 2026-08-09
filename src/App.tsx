@@ -181,7 +181,7 @@ export const App: React.FC = () => {
     targetScore: number,
     roomCodeInput?: string,
     isJoiningRoom?: boolean,
-    onlinePlayerCount: 2 | 3 | 4 = 2
+    onlineSubMode: '1v1' | '3_ffa' | '2v2' | '4_ffa' = '1v1'
   ) => {
     const avatar = playerProfile?.avatar || '🧔‍♂️';
     let initialPlayers: Player[] = [];
@@ -207,34 +207,46 @@ export const App: React.FC = () => {
           (err) => setOnlineStatusText(err)
         );
 
-        initialPlayers.push({
-          id: 'p0',
-          name: playerName,
-          nameAr: playerName,
-          hand: [],
-          isBot: false,
-          isConnected: true,
-          team: 1,
-          avatar,
-          score: 0,
-        });
+        let playerCount = 2;
+        if (onlineSubMode === '3_ffa') playerCount = 3;
+        else if (onlineSubMode === '2v2' || onlineSubMode === '4_ffa') playerCount = 4;
 
-        for (let i = 1; i < onlinePlayerCount; i++) {
-          initialPlayers.push({
-            id: `p${i}`,
-            name: `Waiting for Player ${i + 1}...`,
-            nameAr: `بانتظار انضمام اللاعب ${i + 1}...`,
-            hand: [],
-            isBot: false,
-            isConnected: false,
-            team: (i + 1) as 1 | 2 | 3 | 4,
-            avatar: i === 1 ? '👳‍♂️' : i === 2 ? '👴' : '👵',
-            score: 0,
-          });
+        for (let i = 0; i < playerCount; i++) {
+          let teamNum: 1 | 2 | 3 | 4 = (i + 1) as 1 | 2 | 3 | 4;
+          if (onlineSubMode === '2v2') {
+            teamNum = (i % 2 === 0 ? 1 : 2);
+          }
+
+          if (i === 0) {
+            initialPlayers.push({
+              id: 'p0',
+              name: playerName,
+              nameAr: playerName,
+              hand: [],
+              isBot: false,
+              isConnected: true,
+              team: teamNum,
+              avatar,
+              score: 0,
+            });
+          } else {
+            initialPlayers.push({
+              id: `p${i}`,
+              name: `Waiting for Player ${i + 1}...`,
+              nameAr: `بانتظار انضمام اللاعب ${i + 1}...`,
+              hand: [],
+              isBot: false,
+              isConnected: false,
+              team: teamNum,
+              avatar: i === 1 ? '👳‍♂️' : i === 2 ? '👴' : '👵',
+              score: 0,
+            });
+          }
         }
 
         const waitingState: GameState = {
           mode: 'online',
+          onlineSubMode,
           targetScore,
           players: initialPlayers,
           currentTurnIndex: 0,
@@ -643,7 +655,9 @@ export const App: React.FC = () => {
       pipCounts[p.id] = calculatePipCount(p.hand);
     });
 
-    if (gameState.mode === '2v2') {
+    const isTeamMatch = gameState.mode === '2v2' || (gameState.mode === 'online' && gameState.onlineSubMode === '2v2');
+
+    if (isTeamMatch) {
       const winningTeam = winnerPlayer.team;
       const opposingTeam = winningTeam === 1 ? 2 : 1;
       pointsGained = currentPlayers
@@ -657,7 +671,7 @@ export const App: React.FC = () => {
 
     const updatedPlayers = currentPlayers.map((p) => {
       if (
-        (gameState.mode === '2v2' && p.team === winnerPlayer.team) ||
+        (isTeamMatch && p.team === winnerPlayer.team) ||
         p.id === winnerPlayer.id
       ) {
         return { ...p, score: p.score + pointsGained };
@@ -673,7 +687,7 @@ export const App: React.FC = () => {
     const myPlayer = updatedPlayers.find((p) => p.id === myPlayerId);
     if (matchWinnerPlayer && myPlayer) {
       const iWon = matchWinnerPlayer.id === myPlayerId ||
-        (gameState.mode === '2v2' && matchWinnerPlayer.team === myPlayer.team);
+        (isTeamMatch && matchWinnerPlayer.team === myPlayer.team);
       updateStats(iWon);
       setPlayerProfile(getProfile());
     }
@@ -704,8 +718,9 @@ export const App: React.FC = () => {
     });
 
     let winningPlayer = currentPlayers[0];
+    const isTeamMatch = gameState.mode === '2v2' || (gameState.mode === 'online' && gameState.onlineSubMode === '2v2');
 
-    if (gameState.mode === '2v2') {
+    if (isTeamMatch) {
       const team1Pips = currentPlayers
         .filter((p) => p.team === 1)
         .reduce((sum, p) => sum + pipCounts[p.id], 0);
@@ -952,6 +967,7 @@ export const App: React.FC = () => {
             players={gameState.players}
             targetScore={gameState.targetScore}
             mode={gameState.mode}
+            onlineSubMode={gameState.onlineSubMode}
             roundNumber={gameState.roundNumber}
             language={language}
           />

@@ -97,11 +97,18 @@ export const WaitingRoomComponent: React.FC<WaitingRoomProps> = ({
                     <strong style={{ color: p.isConnected ? '#fff' : '#aaa', fontSize: '0.95rem' }}>
                       {isArabic ? p.nameAr : p.name}
                     </strong>
-                    {idx === 0 && (
-                      <span style={{ fontSize: '0.75rem', color: 'var(--gold-accent)', display: 'block' }}>
-                        {isArabic ? '👑 المضيف (Host)' : '👑 Room Host'}
-                      </span>
-                    )}
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      {idx === 0 && (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--gold-accent)' }}>
+                          {isArabic ? '👑 المضيف' : '👑 Host'}
+                        </span>
+                      )}
+                      {players.length === 4 && (p.team === 1 || p.team === 2) && (
+                        <span style={{ fontSize: '0.75rem', color: p.team === 1 ? '#268bd2' : '#dc322f', fontWeight: 700 }}>
+                          {isArabic ? `فريق ${p.team}` : `Team ${p.team}`}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 

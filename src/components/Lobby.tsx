@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import type { GameMode, Language, PlayerProfile } from '../types/domino';
 import { Users, User, Globe, Trophy, Play, Copy, Check, UserPlus, Settings } from 'lucide-react';
 
+export type OnlineSubMode = '1v1' | '3_ffa' | '2v2' | '4_ffa';
+
 interface LobbyProps {
   profile: PlayerProfile;
   onStartGame: (
@@ -10,7 +12,7 @@ interface LobbyProps {
     targetScore: number,
     roomCode?: string,
     isJoiningRoom?: boolean,
-    onlinePlayerCount?: 2 | 3 | 4
+    onlineSubMode?: OnlineSubMode
   ) => void;
   onEditProfile: () => void;
   language: Language;
@@ -27,7 +29,7 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
   const isArabic = language === 'ar';
   const [mode, setMode] = useState<GameMode>('1v1');
   const [targetScore, setTargetScore] = useState<number>(101);
-  const [onlinePlayerCount, setOnlinePlayerCount] = useState<2 | 3 | 4>(2);
+  const [onlineSubMode, setOnlineSubMode] = useState<OnlineSubMode>('1v1');
   const [hostRoomCode, setHostRoomCode] = useState<string>(
     Math.random().toString(36).substring(2, 8).toUpperCase()
   );
@@ -44,15 +46,22 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
   const handleStart = () => {
     if (mode === 'online' && isJoining) {
       if (!joinCodeInput.trim()) return;
-      onStartGame(mode, profile.displayName, targetScore, joinCodeInput.trim(), true, onlinePlayerCount);
+      onStartGame(mode, profile.displayName, targetScore, joinCodeInput.trim(), true, onlineSubMode);
     } else if (mode === 'online') {
-      onStartGame(mode, profile.displayName, targetScore, hostRoomCode, false, onlinePlayerCount);
+      onStartGame(mode, profile.displayName, targetScore, hostRoomCode, false, onlineSubMode);
     } else {
       onStartGame(mode, profile.displayName, targetScore);
     }
   };
 
   const winRate = profile.gamesPlayed > 0 ? Math.round((profile.wins / profile.gamesPlayed) * 100) : 0;
+
+  const onlineOptions: { id: OnlineSubMode; labelAr: string; labelEn: string; icon: string }[] = [
+    { id: '1v1', labelAr: '1 ضد 1 (لاعبان)', labelEn: '1v1 (2 Players)', icon: '👤' },
+    { id: '3_ffa', labelAr: '3 لاعبين (فردي)', labelEn: '3 Players (FFA)', icon: '👥' },
+    { id: '2v2', labelAr: '2 ضد 2 (فرق)', labelEn: '2v2 Teams (4 Players)', icon: '⚔️' },
+    { id: '4_ffa', labelAr: '4 لاعبين (فردي)', labelEn: '4 Players (FFA)', icon: '🎮' },
+  ];
 
   return (
     <div className="lobby-overlay">
@@ -132,34 +141,36 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
             <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
               <button
                 className={`game-btn ${!isJoining ? 'active' : ''}`}
-                style={{ flex: 1, fontSize: '0.8rem', justifyContent: 'center' }}
+                style={{ flex: 1, fontSize: '0.85rem', justifyContent: 'center' }}
                 onClick={() => setIsJoining(false)}
               >
                 {isArabic ? 'إنشاء غرفة' : 'Create Room'}
               </button>
               <button
                 className={`game-btn ${isJoining ? 'active' : ''}`}
-                style={{ flex: 1, fontSize: '0.8rem', justifyContent: 'center' }}
+                style={{ flex: 1, fontSize: '0.85rem', justifyContent: 'center' }}
                 onClick={() => setIsJoining(true)}
               >
-                {isArabic ? 'انضمام' : 'Join Room'}
+                {isArabic ? 'انضمام لغرفة' : 'Join Room'}
               </button>
             </div>
 
             {!isJoining && (
               <div style={{ marginBottom: '10px' }}>
                 <label style={{ fontSize: '0.8rem', color: 'var(--gold-accent)', fontWeight: 700 }}>
-                  {isArabic ? 'عدد اللاعبين:' : 'Players:'}
+                  {isArabic ? 'نوع الغرفة الأونلاين:' : 'Online Room Type:'}
                 </label>
-                <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
-                  {[2, 3, 4].map((count) => (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '6px' }}>
+                  {onlineOptions.map((sub) => (
                     <button
-                      key={count}
-                      className={`game-btn ${onlinePlayerCount === count ? 'active' : ''}`}
-                      style={{ flex: 1, fontSize: '0.8rem', justifyContent: 'center' }}
-                      onClick={() => setOnlinePlayerCount(count as 2 | 3 | 4)}
+                      key={sub.id}
+                      type="button"
+                      className={`game-btn ${onlineSubMode === sub.id ? 'active' : ''}`}
+                      style={{ fontSize: '0.8rem', justifyContent: 'center', padding: '8px 6px' }}
+                      onClick={() => setOnlineSubMode(sub.id)}
                     >
-                      {count}
+                      <span>{sub.icon}</span>
+                      <span>{isArabic ? sub.labelAr : sub.labelEn}</span>
                     </button>
                   ))}
                 </div>

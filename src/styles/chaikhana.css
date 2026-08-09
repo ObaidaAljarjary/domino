@@ -602,6 +602,13 @@ html, body, #root {
   border-color: #666;
 }
 
+.game-btn.active {
+  background: var(--gold-accent);
+  color: var(--wood-dark);
+  box-shadow: 0 0 14px var(--gold-glow);
+  border-color: #ffd700;
+}
+
 /* Bot Speech Banner */
 .bot-banner {
   position: absolute;
