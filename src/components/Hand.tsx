@@ -9,6 +9,7 @@ interface HandProps {
   selectedTile: TileType | null;
   playableTiles: TileType[];
   onSelectTile: (tile: TileType) => void;
+  onDragStartTile: (tile: TileType) => void;
   onDrawTile: () => void;
   onPassTurn: () => void;
   onSortHand: () => void;
@@ -24,6 +25,7 @@ export const HandComponent: React.FC<HandProps> = ({
   selectedTile,
   playableTiles,
   onSelectTile,
+  onDragStartTile,
   onDrawTile,
   onPassTurn,
   onSortHand,
@@ -42,7 +44,7 @@ export const HandComponent: React.FC<HandProps> = ({
 
         {isCurrentTurn && (
           <span className="turn-indicator-badge">
-            {isArabic ? '⚡ دورك الآن!' : '⚡ Your Turn!'}
+            {isArabic ? '⚡ دورك الآن! (اسحب أو انقر القطعة)' : '⚡ Your Turn! (Drag or Click tile)'}
           </span>
         )}
 
@@ -64,6 +66,11 @@ export const HandComponent: React.FC<HandProps> = ({
               key={tile.id}
               tile={tile}
               isPlayable={isPlayable}
+              onDragStart={() => {
+                if (isCurrentTurn && isPlayable) {
+                  onDragStartTile(tile);
+                }
+              }}
               onClick={() => {
                 if (isCurrentTurn && isPlayable) {
                   onSelectTile(tile);
@@ -85,7 +92,7 @@ export const HandComponent: React.FC<HandProps> = ({
         {canDraw && (
           <button className="game-btn" onClick={onDrawTile} disabled={!isCurrentTurn}>
             <ArrowDownRight size={16} />
-            {isArabic ? `سحب قطعه (${boneyardCount})` : `Draw Tile (${boneyardCount})`}
+            {isArabic ? `سحب قطعة (${boneyardCount})` : `Draw Tile (${boneyardCount})`}
           </button>
         )}
 

@@ -523,6 +523,22 @@ export const App: React.FC = () => {
     setSoundMuted(!soundMuted);
   };
 
+  const handleTilePlacementAction = (position: PlayPosition, droppedTileId?: string) => {
+    let tileToPlay = selectedTile;
+    if (droppedTileId && currentPlayer) {
+      const foundInHand = currentPlayer.hand.find((t) => t.id === droppedTileId);
+      if (foundInHand) tileToPlay = foundInHand;
+    }
+
+    if (!tileToPlay) return;
+
+    // Verify move validity for position
+    const movesForTile = validMoves.filter((m) => m.tile.id === tileToPlay!.id);
+    if (movesForTile.some((m) => m.position === position || m.position === 'first')) {
+      executePlayTile(tileToPlay, position);
+    }
+  };
+
   return (
     <div className="chaikhana-app">
       {/* Lobby Overlay */}
@@ -599,9 +615,7 @@ export const App: React.FC = () => {
                   .map((m) => m.position)
               : []
           }
-          onPlayTile={(pos) => {
-            if (selectedTile) executePlayTile(selectedTile, pos);
-          }}
+          onPlayTile={handleTilePlacementAction}
           language={language}
         />
 
@@ -615,6 +629,7 @@ export const App: React.FC = () => {
             isCurrentTurn={!currentPlayer.isBot}
             selectedTile={selectedTile}
             playableTiles={playableTiles}
+            onDragStartTile={(tile) => setSelectedTile(tile)}
             onSelectTile={(tile) => {
               const moves = validMoves.filter((m) => m.tile.id === tile.id);
               if (moves.length === 1) {

@@ -8,11 +8,11 @@
   --wood-light: #4e291b;
   --wood-border: #6d3925;
   --gold-accent: #e5b842;
-  --gold-glow: rgba(229, 184, 66, 0.4);
+  --gold-glow: rgba(229, 184, 66, 0.5);
   --tea-amber: #c85012;
   --tea-dark: #7a2300;
   --tile-bg: #fcfbf5;
-  --tile-shadow: rgba(0, 0, 0, 0.5);
+  --tile-shadow: rgba(0, 0, 0, 0.55);
   --pip-color: #1a1a1a;
   --brass-pin: #d4af37;
   --arabic-font: 'Cairo', 'Tajawal', sans-serif;
@@ -42,7 +42,7 @@ body {
   display: flex;
   flex-direction: column;
   background: 
-    radial-gradient(circle at 50% 30%, rgba(229, 184, 66, 0.08), transparent 70%),
+    radial-gradient(circle at 50% 30%, rgba(229, 184, 66, 0.1), transparent 70%),
     radial-gradient(circle at 50% 50%, var(--wood-medium) 0%, var(--wood-dark) 100%);
   position: relative;
   overflow: hidden;
@@ -53,12 +53,13 @@ body {
   flex: 1;
   position: relative;
   margin: 12px;
-  border-radius: 20px;
-  border: 8px solid var(--wood-border);
+  border-radius: 24px;
+  border: 10px solid var(--wood-border);
   box-shadow: 
-    inset 0 0 40px rgba(0, 0, 0, 0.8),
-    0 10px 30px rgba(0, 0, 0, 0.7);
+    inset 0 0 50px rgba(0, 0, 0, 0.85),
+    0 12px 35px rgba(0, 0, 0, 0.8);
   background: 
+    radial-gradient(circle at 50% 50%, rgba(229, 184, 66, 0.05) 0%, transparent 60%),
     repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 4px),
     linear-gradient(135deg, #2c160e 0%, #1a0b06 100%);
   display: flex;
@@ -67,7 +68,7 @@ body {
   overflow: hidden;
 }
 
-/* Oriental Pattern Border Trim */
+/* Oriental Arabesque Gold Pattern Border Trim */
 .chaikhana-table-container::before {
   content: '';
   position: absolute;
@@ -75,10 +76,10 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  border: 2px dashed rgba(229, 184, 66, 0.25);
-  border-radius: 12px;
+  border: 3px dashed rgba(229, 184, 66, 0.35);
+  border-radius: 14px;
   pointer-events: none;
-  margin: 4px;
+  margin: 6px;
 }
 
 /* Header Bar */
@@ -87,8 +88,8 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 12px 24px;
-  background: rgba(27, 15, 11, 0.85);
-  backdrop-filter: blur(8px);
+  background: rgba(27, 15, 11, 0.88);
+  backdrop-filter: blur(10px);
   border-bottom: 2px solid var(--wood-border);
   z-index: 10;
 }
@@ -103,13 +104,6 @@ body {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
-.brand-icon {
-  width: 32px;
-  height: 32px;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-}
-
-/* Action Controls Header */
 .header-actions {
   display: flex;
   align-items: center;
@@ -140,27 +134,119 @@ body {
   box-shadow: 0 4px 12px var(--gold-glow);
 }
 
-/* Domino Board Area */
-.board-area {
+/* Centered Board Area */
+.board-area.centered-table-board {
   flex: 1;
   position: relative;
-  overflow: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  width: 100%;
+  height: 100%;
+  padding: 30px;
+  overflow: auto;
 }
 
-.snake-container {
+/* Centered Domino Snake Container */
+.snake-container.centered-snake-wrapper {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  max-width: 90%;
+  align-content: center;
+  gap: 6px;
+  max-width: 92%;
   max-height: 85%;
   position: relative;
+  margin: auto;
   transition: all 0.3s ease;
+}
+
+/* Traditional Iraqi Arabesque Corner Ornaments */
+.iraqi-ornament-corner {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  pointer-events: none;
+  opacity: 0.3;
+  background-image: radial-gradient(circle, var(--gold-accent) 2px, transparent 2px);
+  background-size: 10px 10px;
+  border: 2px solid var(--gold-accent);
+}
+
+.iraqi-ornament-corner.top-left {
+  top: 16px;
+  left: 16px;
+  border-right: none;
+  border-bottom: none;
+  border-radius: 8px 0 0 0;
+}
+
+.iraqi-ornament-corner.top-right {
+  top: 16px;
+  right: 16px;
+  border-left: none;
+  border-bottom: none;
+  border-radius: 0 8px 0 0;
+}
+
+.iraqi-ornament-corner.bottom-left {
+  bottom: 16px;
+  left: 16px;
+  border-right: none;
+  border-top: none;
+  border-radius: 0 0 0 8px;
+}
+
+.iraqi-ornament-corner.bottom-right {
+  bottom: 16px;
+  right: 16px;
+  border-left: none;
+  border-top: none;
+  border-radius: 0 0 8px 0;
+}
+
+/* Center Motif for Empty Board */
+.empty-board-box {
+  text-align: center;
+  padding: 36px 48px;
+  background: rgba(27, 15, 11, 0.7);
+  backdrop-filter: blur(8px);
+  border: 2px dashed var(--gold-accent);
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  z-index: 5;
+  transition: all 0.2s ease;
+}
+
+.board-area.drag-active .empty-board-box {
+  border-color: #4ef037;
+  box-shadow: 0 0 25px rgba(78, 240, 55, 0.6);
+  transform: scale(1.05);
+}
+
+.ornament-star {
+  font-size: 3.5rem;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
+  animation: floatStar 3s infinite ease-in-out alternate;
+}
+
+@keyframes floatStar {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-8px); }
+}
+
+.empty-board-title {
+  color: var(--gold-accent);
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.empty-board-desc {
+  color: #ccc;
+  font-size: 0.95rem;
+  margin-top: 6px;
 }
 
 /* Handcrafted Ivory Domino Tile */
@@ -189,10 +275,19 @@ body {
   flex-direction: row;
 }
 
+.domino-tile.draggable {
+  cursor: grab;
+}
+
+.domino-tile.draggable:active {
+  cursor: grabbing;
+  opacity: 0.8;
+}
+
 .domino-tile.playable {
   box-shadow: 
-    0 0 16px var(--gold-accent),
-    0 4px 10px var(--tile-shadow);
+    0 0 18px var(--gold-accent),
+    0 4px 12px var(--tile-shadow);
   border-color: var(--gold-accent);
   transform: translateY(-6px);
   animation: pulseGlow 1.5s infinite alternate;
@@ -200,7 +295,7 @@ body {
 
 @keyframes pulseGlow {
   0% { box-shadow: 0 0 8px var(--gold-accent); }
-  100% { box-shadow: 0 0 20px var(--gold-accent), 0 0 30px var(--gold-accent); }
+  100% { box-shadow: 0 0 22px var(--gold-accent), 0 0 30px var(--gold-accent); }
 }
 
 .domino-tile:hover:not(.disabled) {
@@ -273,22 +368,39 @@ body {
 .pip-bottom-left { grid-area: 3 / 1; }
 .pip-bottom-right { grid-area: 3 / 3; }
 
-/* End Placement Drop Target Buttons */
+/* Drop Target Zones */
+.drop-zone-wrapper {
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.drop-zone-wrapper.visible {
+  display: flex;
+}
+
 .drop-target-btn {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: rgba(229, 184, 66, 0.2);
+  background: rgba(229, 184, 66, 0.25);
   border: 2px dashed var(--gold-accent);
   color: var(--gold-accent);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-weight: 700;
-  font-size: 0.85rem;
+  font-weight: 800;
+  font-size: 0.9rem;
   transition: all 0.2s ease;
   animation: bouncePulse 1s infinite alternate;
+}
+
+.drop-zone-wrapper.drag-over .drop-target-btn {
+  background: var(--gold-accent);
+  color: var(--wood-dark);
+  transform: scale(1.25);
+  box-shadow: 0 0 25px var(--gold-glow);
 }
 
 .drop-target-btn:hover {
@@ -332,7 +444,6 @@ body {
   overflow: visible;
 }
 
-/* Golden Waist Ring of Istikan */
 .istikan-glass::before {
   content: '';
   position: absolute;
@@ -343,7 +454,6 @@ body {
   background: linear-gradient(90deg, #b8860b, #ffd700, #b8860b);
 }
 
-/* Tea Spoon */
 .tea-spoon {
   width: 6px;
   height: 42px;
@@ -356,7 +466,6 @@ body {
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
-/* Steam Animation */
 .steam {
   width: 6px;
   height: 20px;
@@ -388,10 +497,10 @@ body {
 }
 
 .sip-tooltip {
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   color: var(--gold-accent);
   font-size: 0.75rem;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: 10px;
   margin-top: 4px;
   white-space: nowrap;
@@ -417,7 +526,7 @@ body {
   gap: 8px;
   overflow-x: auto;
   max-width: 100%;
-  padding: 4px 12px;
+  padding: 6px 14px;
 }
 
 .player-info-tag {
@@ -444,7 +553,6 @@ body {
   100% { transform: scale(1.06); }
 }
 
-/* Action Buttons Bar (Draw / Pass / Sort) */
 .action-buttons-group {
   display: flex;
   gap: 12px;
@@ -480,7 +588,7 @@ body {
   border-color: #666;
 }
 
-/* Iraqi Bot Dialogue Speech Bubble */
+/* Bot Speech Banner */
 .bot-banner {
   position: absolute;
   top: 70px;
@@ -506,7 +614,7 @@ body {
   100% { opacity: 1; transform: translate(-50%, 0); }
 }
 
-/* Score Ledger Modal & Banner */
+/* Score Notebook */
 .score-notebook {
   position: absolute;
   top: 75px;
@@ -541,7 +649,7 @@ body {
   font-size: 0.95rem;
 }
 
-/* Lobby Modal Overlay */
+/* Lobby Overlay */
 .lobby-overlay {
   position: fixed;
   top: 0;
@@ -628,7 +736,6 @@ body {
   border-color: var(--gold-accent);
 }
 
-/* Round / Match End Banner Modal */
 .round-end-modal {
   position: fixed;
   top: 0;

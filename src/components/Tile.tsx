@@ -6,6 +6,7 @@ interface TileProps {
   orientation?: 'vertical' | 'horizontal';
   isPlayable?: boolean;
   onClick?: () => void;
+  onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
   disabled?: boolean;
   className?: string;
   faceDown?: boolean;
@@ -16,6 +17,7 @@ export const TileComponent: React.FC<TileProps> = ({
   orientation = 'vertical',
   isPlayable = false,
   onClick,
+  onDragStart,
   disabled = false,
   className = '',
   faceDown = false,
@@ -64,8 +66,16 @@ export const TileComponent: React.FC<TileProps> = ({
   return (
     <div
       className={`domino-tile ${isHorizontal ? 'horizontal' : ''} ${
-        isPlayable ? 'playable' : ''
+        isPlayable ? 'playable draggable' : ''
       } ${disabled ? 'disabled' : ''} ${className}`}
+      draggable={isPlayable}
+      onDragStart={(e) => {
+        if (isPlayable && onDragStart) {
+          e.dataTransfer.setData('text/plain', tile.id);
+          e.dataTransfer.effectAllowed = 'move';
+          onDragStart(e);
+        }
+      }}
       onClick={() => {
         if (!disabled && onClick) onClick();
       }}
