@@ -742,9 +742,10 @@ export const App: React.FC = () => {
     handleRoundWin(winningPlayer, 'blocked', currentPlayers);
   };
 
-  // Bot Turn Automation Effect
+  // Bot Turn Automation Effect (fires on turn start, and re-fires after drawing until bot plays or passes)
   useEffect(() => {
     if (gameState.status !== 'playing') return;
+    if (gameState.mode === 'online' && !multiplayerManager.isHost) return;
     if (!currentPlayer || !currentPlayer.isBot) return;
 
     const timer = setTimeout(() => {
@@ -766,7 +767,7 @@ export const App: React.FC = () => {
           messageEn: randDialogue.en,
         });
 
-        if (Math.random() < 0.4) {
+        if (Math.random() < 0.3) {
           soundEngine.speakIraqiPhrase(randDialogue.ar);
         }
 
@@ -794,10 +795,16 @@ export const App: React.FC = () => {
 
         handlePassTurn();
       }
-    }, 900);
+    }, 800);
 
     return () => clearTimeout(timer);
-  }, [gameState.currentTurnIndex, gameState.status, gameState.board]);
+  }, [
+    gameState.currentTurnIndex,
+    gameState.status,
+    gameState.board,
+    gameState.players,
+    gameState.boneyard,
+  ]);
 
   const toggleSound = () => {
     soundEngine.soundEnabled = !soundMuted;
