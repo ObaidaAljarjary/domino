@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import type { GameMode, Language } from '../types/domino';
-import { Users, User, Globe, Trophy, Play, Copy, Check, UserPlus } from 'lucide-react';
+import type { GameMode, Language, PlayerProfile } from '../types/domino';
+import { Users, User, Globe, Trophy, Play, Copy, Check, UserPlus, Settings } from 'lucide-react';
 
 interface LobbyProps {
+  profile: PlayerProfile;
   onStartGame: (
     mode: GameMode,
     playerName: string,
@@ -11,18 +12,20 @@ interface LobbyProps {
     isJoiningRoom?: boolean,
     onlinePlayerCount?: 2 | 3 | 4
   ) => void;
+  onEditProfile: () => void;
   language: Language;
   onToggleLanguage: () => void;
 }
 
 export const LobbyComponent: React.FC<LobbyProps> = ({
+  profile,
   onStartGame,
+  onEditProfile,
   language,
   onToggleLanguage,
 }) => {
   const isArabic = language === 'ar';
   const [mode, setMode] = useState<GameMode>('1v1');
-  const [playerName, setPlayerName] = useState(isArabic ? 'أبو العز' : 'Player 1');
   const [targetScore, setTargetScore] = useState<number>(101);
   const [onlinePlayerCount, setOnlinePlayerCount] = useState<2 | 3 | 4>(2);
   const [hostRoomCode, setHostRoomCode] = useState<string>(
@@ -41,158 +44,122 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
   const handleStart = () => {
     if (mode === 'online' && isJoining) {
       if (!joinCodeInput.trim()) return;
-      onStartGame(mode, playerName, targetScore, joinCodeInput.trim(), true, onlinePlayerCount);
+      onStartGame(mode, profile.displayName, targetScore, joinCodeInput.trim(), true, onlinePlayerCount);
     } else if (mode === 'online') {
-      onStartGame(mode, playerName, targetScore, hostRoomCode, false, onlinePlayerCount);
+      onStartGame(mode, profile.displayName, targetScore, hostRoomCode, false, onlinePlayerCount);
     } else {
-      onStartGame(mode, playerName, targetScore);
+      onStartGame(mode, profile.displayName, targetScore);
     }
   };
+
+  const winRate = profile.gamesPlayed > 0 ? Math.round((profile.wins / profile.gamesPlayed) * 100) : 0;
 
   return (
     <div className="lobby-overlay">
       <div className="lobby-card" style={{ maxWidth: '580px' }}>
+        {/* Header with profile & lang */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div className="brand-title">
             <span style={{ fontSize: '2.2rem' }}>🀏</span>
-            <div className="lobby-title">{isArabic ? 'دومينو الشايخانة' : 'Chaikhana Dominoes'}</div>
+            <div className="lobby-title" style={{ fontSize: '1.6rem' }}>{isArabic ? 'دومينو الشايخانة' : 'Chaikhana Dominoes'}</div>
           </div>
-          <button className="icon-btn" onClick={onToggleLanguage}>
-            <Globe size={18} />
-            {isArabic ? 'English' : 'العربية'}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="icon-btn" onClick={onToggleLanguage}>
+              <Globe size={16} />
+              {isArabic ? 'EN' : 'عر'}
+            </button>
+          </div>
+        </div>
+
+        {/* Profile Card */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', background: 'rgba(0,0,0,0.3)', padding: '10px 14px', borderRadius: '14px', border: '1px solid rgba(229,184,66,0.3)' }}>
+          <span style={{ fontSize: '2.4rem' }}>{profile.avatar}</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#fff' }}>{profile.displayName}</div>
+            <div style={{ display: 'flex', gap: '12px', fontSize: '0.8rem', color: '#aaa', marginTop: '2px' }}>
+              <span>🎮 {profile.gamesPlayed}</span>
+              <span>🏆 {profile.wins}</span>
+              <span>📊 {winRate}%</span>
+            </div>
+          </div>
+          <button className="icon-btn" onClick={onEditProfile} style={{ padding: '6px 10px' }}>
+            <Settings size={16} />
           </button>
-        </div>
-
-        <div className="lobby-subtitle">
-          {isArabic
-            ? 'لعبة الدومينو العراقية الأصيلة - 2 و 3 و 4 لاعبين أونلاين وبوتات!'
-            : 'Authentic Iraqi Cafe Dominoes - 2, 3 & 4 Players Online & Bots!'}
-        </div>
-
-        {/* Player Name Input */}
-        <div style={{ textAlign: 'start' }}>
-          <label style={{ fontSize: '0.9rem', color: 'var(--gold-accent)', fontWeight: 700 }}>
-            {isArabic ? 'اسم اللاعب:' : 'Player Name:'}
-          </label>
-          <input
-            className="input-field"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            style={{ marginTop: '4px' }}
-          />
         </div>
 
         {/* Game Mode Selector */}
         <div style={{ textAlign: 'start' }}>
-          <label style={{ fontSize: '0.9rem', color: 'var(--gold-accent)', fontWeight: 700 }}>
+          <label style={{ fontSize: '0.85rem', color: 'var(--gold-accent)', fontWeight: 700 }}>
             {isArabic ? 'اختر نمط اللعب:' : 'Select Game Mode:'}
           </label>
 
-          <div className="mode-selector" style={{ marginTop: '8px', gridTemplateColumns: '1fr 1fr' }}>
-            <div
-              className={`mode-card ${mode === '1v1' ? 'active' : ''}`}
-              onClick={() => setMode('1v1')}
-            >
-              <User size={24} color="var(--gold-accent)" />
-              <strong style={{ fontSize: '0.95rem' }}>{isArabic ? '1 ضد 1 (لاعبين)' : '1v1 Match'}</strong>
-              <span style={{ fontSize: '0.75rem', color: '#aaa' }}>
-                {isArabic ? 'أنت ضد البوت أبو جاسم' : 'vs Abu Jasim Bot'}
-              </span>
+          <div className="mode-selector" style={{ marginTop: '6px', gridTemplateColumns: '1fr 1fr' }}>
+            <div className={`mode-card ${mode === '1v1' ? 'active' : ''}`} onClick={() => setMode('1v1')}>
+              <User size={22} color="var(--gold-accent)" />
+              <strong style={{ fontSize: '0.85rem' }}>{isArabic ? '1 ضد 1' : '1v1 Bot'}</strong>
             </div>
 
-            <div
-              className={`mode-card ${mode === '3_ffa' ? 'active' : ''}`}
-              onClick={() => setMode('3_ffa')}
-            >
-              <UserPlus size={24} color="var(--gold-accent)" />
-              <strong style={{ fontSize: '0.95rem' }}>{isArabic ? '3 لاعبين فردي' : '3 Players FFA'}</strong>
-              <span style={{ fontSize: '0.75rem', color: '#aaa' }}>
-                {isArabic ? 'أنت وبوتين كل من لحاله' : '3 Player Free For All'}
-              </span>
+            <div className={`mode-card ${mode === '3_ffa' ? 'active' : ''}`} onClick={() => setMode('3_ffa')}>
+              <UserPlus size={22} color="var(--gold-accent)" />
+              <strong style={{ fontSize: '0.85rem' }}>{isArabic ? '3 لاعبين' : '3 Players'}</strong>
             </div>
 
-            <div
-              className={`mode-card ${mode === '2v2' ? 'active' : ''}`}
-              onClick={() => setMode('2v2')}
-            >
-              <Users size={24} color="var(--gold-accent)" />
-              <strong style={{ fontSize: '0.95rem' }}>{isArabic ? '4 لاعبين (فرق 2v2)' : '2v2 Team Battle'}</strong>
-              <span style={{ fontSize: '0.75rem', color: '#aaa' }}>
-                {isArabic ? 'أنت والحجي ضد المنافسين' : 'You + Bot vs 2 Bots'}
-              </span>
+            <div className={`mode-card ${mode === '2v2' ? 'active' : ''}`} onClick={() => setMode('2v2')}>
+              <Users size={22} color="var(--gold-accent)" />
+              <strong style={{ fontSize: '0.85rem' }}>{isArabic ? '2 ضد 2 فرق' : '2v2 Teams'}</strong>
             </div>
 
-            <div
-              className={`mode-card ${mode === '4_ffa' ? 'active' : ''}`}
-              onClick={() => setMode('4_ffa')}
-            >
-              <Users size={24} color="var(--gold-accent)" />
-              <strong style={{ fontSize: '0.95rem' }}>{isArabic ? '4 لاعبين (فردي)' : '4 Players FFA'}</strong>
-              <span style={{ fontSize: '0.75rem', color: '#aaa' }}>
-                {isArabic ? '4 لاعبين كل من لحاله' : '4 Player Free For All'}
-              </span>
+            <div className={`mode-card ${mode === '4_ffa' ? 'active' : ''}`} onClick={() => setMode('4_ffa')}>
+              <Users size={22} color="var(--gold-accent)" />
+              <strong style={{ fontSize: '0.85rem' }}>{isArabic ? '4 لاعبين' : '4 Players'}</strong>
             </div>
 
-            <div
-              className={`mode-card ${mode === 'pass_play' ? 'active' : ''}`}
-              onClick={() => setMode('pass_play')}
-              style={{ gridColumn: 'span 1' }}
-            >
-              <Users size={24} color="var(--gold-accent)" />
-              <strong style={{ fontSize: '0.95rem' }}>{isArabic ? 'لعب محلي' : 'Pass & Play'}</strong>
-              <span style={{ fontSize: '0.75rem', color: '#aaa' }}>
-                {isArabic ? 'على نفس الجهاز' : 'Same Device'}
-              </span>
+            <div className={`mode-card ${mode === 'pass_play' ? 'active' : ''}`} onClick={() => setMode('pass_play')}>
+              <Users size={22} color="var(--gold-accent)" />
+              <strong style={{ fontSize: '0.85rem' }}>{isArabic ? 'لعب محلي' : 'Pass & Play'}</strong>
             </div>
 
-            <div
-              className={`mode-card ${mode === 'online' ? 'active' : ''}`}
-              onClick={() => setMode('online')}
-              style={{ gridColumn: 'span 1' }}
-            >
-              <Globe size={24} color="var(--gold-accent)" />
-              <strong style={{ fontSize: '0.95rem' }}>{isArabic ? 'غرفة أونلاين' : 'Online Room'}</strong>
-              <span style={{ fontSize: '0.75rem', color: '#aaa' }}>
-                {isArabic ? '2 أو 3 أو 4 أصدقاء' : '2, 3 or 4 Players'}
-              </span>
+            <div className={`mode-card ${mode === 'online' ? 'active' : ''}`} onClick={() => setMode('online')}>
+              <Globe size={22} color="var(--gold-accent)" />
+              <strong style={{ fontSize: '0.85rem' }}>{isArabic ? 'أونلاين' : 'Online Room'}</strong>
             </div>
           </div>
         </div>
 
-        {/* Online Room Mode Options */}
+        {/* Online Room Options */}
         {mode === 'online' && (
-          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '14px', borderRadius: '12px', textAlign: 'start' }}>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '12px', textAlign: 'start' }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
               <button
                 className={`game-btn ${!isJoining ? 'active' : ''}`}
-                style={{ flex: 1, fontSize: '0.85rem' }}
+                style={{ flex: 1, fontSize: '0.8rem', justifyContent: 'center' }}
                 onClick={() => setIsJoining(false)}
               >
-                {isArabic ? 'إنشاء غرفة جديدة' : 'Create Room'}
+                {isArabic ? 'إنشاء غرفة' : 'Create Room'}
               </button>
               <button
                 className={`game-btn ${isJoining ? 'active' : ''}`}
-                style={{ flex: 1, fontSize: '0.85rem' }}
+                style={{ flex: 1, fontSize: '0.8rem', justifyContent: 'center' }}
                 onClick={() => setIsJoining(true)}
               >
-                {isArabic ? 'الانضمام لغرفة' : 'Join Room'}
+                {isArabic ? 'انضمام' : 'Join Room'}
               </button>
             </div>
 
             {!isJoining && (
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ fontSize: '0.85rem', color: 'var(--gold-accent)', fontWeight: 700 }}>
-                  {isArabic ? 'عدد لاعبي الغرفة:' : 'Room Player Count:'}
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{ fontSize: '0.8rem', color: 'var(--gold-accent)', fontWeight: 700 }}>
+                  {isArabic ? 'عدد اللاعبين:' : 'Players:'}
                 </label>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
                   {[2, 3, 4].map((count) => (
                     <button
                       key={count}
                       className={`game-btn ${onlinePlayerCount === count ? 'active' : ''}`}
-                      style={{ flex: 1, fontSize: '0.85rem', justifyContent: 'center' }}
+                      style={{ flex: 1, fontSize: '0.8rem', justifyContent: 'center' }}
                       onClick={() => setOnlinePlayerCount(count as 2 | 3 | 4)}
                     >
-                      {count} {isArabic ? 'لاعبين' : 'Players'}
+                      {count}
                     </button>
                   ))}
                 </div>
@@ -201,12 +168,12 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
 
             {isJoining ? (
               <div>
-                <label style={{ fontSize: '0.85rem', color: 'var(--gold-accent)' }}>
-                  {isArabic ? 'رمز الغرفة المراد الانضمام لها:' : 'Target Room Code:'}
+                <label style={{ fontSize: '0.8rem', color: 'var(--gold-accent)' }}>
+                  {isArabic ? 'رمز الغرفة:' : 'Room Code:'}
                 </label>
                 <input
                   className="input-field"
-                  placeholder={isArabic ? 'أدخل الرمز (مثلاً CHAI77)' : 'Enter Room Code (e.g. CHAI77)'}
+                  placeholder={isArabic ? 'أدخل الرمز' : 'Enter Code'}
                   value={joinCodeInput}
                   onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
                   style={{ marginTop: '4px' }}
@@ -214,8 +181,8 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
               </div>
             ) : (
               <div>
-                <label style={{ fontSize: '0.85rem', color: 'var(--gold-accent)' }}>
-                  {isArabic ? 'رمز غرفتك الخاص (شاركه مع أصدقائك):' : 'Your Unique Room Code (Share with friends):'}
+                <label style={{ fontSize: '0.8rem', color: 'var(--gold-accent)' }}>
+                  {isArabic ? 'رمز غرفتك:' : 'Your Room Code:'}
                 </label>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
                   <input
@@ -224,9 +191,8 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
                     onChange={(e) => setHostRoomCode(e.target.value.toUpperCase())}
                     style={{ fontWeight: 800, letterSpacing: '2px', textAlign: 'center', fontSize: '1.1rem' }}
                   />
-                  <button className="icon-btn" onClick={handleCopyCode}>
-                    {copied ? <Check size={18} color="#4ef037" /> : <Copy size={18} />}
-                    {isArabic ? (copied ? 'تم النسخ!' : 'نسخ') : copied ? 'Copied!' : 'Copy'}
+                  <button className="icon-btn" onClick={handleCopyCode} style={{ padding: '6px 10px' }}>
+                    {copied ? <Check size={16} color="#4ef037" /> : <Copy size={16} />}
                   </button>
                 </div>
               </div>
@@ -234,39 +200,36 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
           </div>
         )}
 
-        {/* Target Score Selector */}
+        {/* Target Score */}
         <div style={{ textAlign: 'start' }}>
-          <label style={{ fontSize: '0.9rem', color: 'var(--gold-accent)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Trophy size={16} />
-            {isArabic ? 'هدف المباراة (النقاط):' : 'Target Match Score:'}
+          <label style={{ fontSize: '0.85rem', color: 'var(--gold-accent)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Trophy size={14} />
+            {isArabic ? 'هدف النقاط:' : 'Target Score:'}
           </label>
-          <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
             {[50, 101, 150].map((score) => (
               <button
                 key={score}
                 className={`game-btn ${targetScore === score ? 'active' : ''}`}
-                style={{
-                  flex: 1,
-                  borderColor: targetScore === score ? 'var(--gold-accent)' : 'transparent',
-                }}
+                style={{ flex: 1, borderColor: targetScore === score ? 'var(--gold-accent)' : 'transparent', justifyContent: 'center' }}
                 onClick={() => setTargetScore(score)}
               >
-                {score} {isArabic ? 'نقطة' : 'pts'}
+                {score}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Start Game Action */}
+        {/* Start Button */}
         <button
           className="game-btn"
           style={{
             background: 'var(--gold-accent)',
             color: 'var(--wood-dark)',
             justifyContent: 'center',
-            fontSize: '1.2rem',
+            fontSize: '1.15rem',
             padding: '14px',
-            marginTop: '8px',
+            marginTop: '4px',
           }}
           onClick={handleStart}
         >
@@ -274,14 +237,14 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
           {isArabic
             ? mode === 'online'
               ? isJoining
-                ? 'انضمام للغرفة!'
-                : 'إنشاء ودخول الغرفة!'
-              : 'ابدأ الجلسة الشايخانة!'
+                ? 'انضمام!'
+                : 'إنشاء الغرفة!'
+              : 'ابدأ الجلسة!'
             : mode === 'online'
             ? isJoining
-              ? 'Join Room!'
-              : 'Create & Launch Room!'
-            : 'Start Chaikhana Match!'}
+              ? 'Join!'
+              : 'Create Room!'
+            : 'Start Match!'}
         </button>
       </div>
     </div>

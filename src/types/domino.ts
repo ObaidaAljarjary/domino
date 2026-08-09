@@ -16,6 +16,16 @@ export interface PlayedTile {
   matchingEndVal: number;
 }
 
+export interface PlayerProfile {
+  id: string;
+  displayName: string;
+  avatar: string;
+  wins: number;
+  losses: number;
+  gamesPlayed: number;
+  createdAt: string;
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -27,6 +37,7 @@ export interface Player {
   score: number;
   isPassed?: boolean;
   isConnected?: boolean;
+  profileId?: string;
 }
 
 export type GameMode = '1v1' | '3_ffa' | '2v2' | '4_ffa' | 'pass_play' | 'online';
@@ -56,7 +67,7 @@ export interface GameState {
   currentTurnIndex: number;
   board: GameBoard;
   boneyard: Tile[];
-  status: 'lobby' | 'waiting' | 'playing' | 'round_ended' | 'match_ended';
+  status: 'lobby' | 'profile' | 'waiting' | 'playing' | 'round_ended' | 'match_ended';
   roundNumber: number;
   openingPlayerIndex: number;
   firstTilePlayed: boolean;

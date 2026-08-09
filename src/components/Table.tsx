@@ -8,6 +8,7 @@ interface TableProps {
   validPositions: PlayPosition[];
   onPlayTile: (position: PlayPosition, droppedTileId?: string) => void;
   language: 'ar' | 'en';
+  lastPlayedTileId?: string;
 }
 
 export const TableComponent: React.FC<TableProps> = ({
@@ -16,6 +17,7 @@ export const TableComponent: React.FC<TableProps> = ({
   validPositions,
   onPlayTile,
   language,
+  lastPlayedTileId,
 }) => {
   const isArabic = language === 'ar';
   const [isDragOverLeft, setIsDragOverLeft] = useState(false);
@@ -101,6 +103,7 @@ export const TableComponent: React.FC<TableProps> = ({
             displayTopVal={played.displayTop}
             displayBottomVal={played.displayBottom}
             orientation={played.isDouble ? 'vertical' : 'horizontal'}
+            className={played.tile.id === lastPlayedTileId ? 'last-played' : ''}
           />
         ))}
 

@@ -6,6 +6,7 @@ interface ScoreBoardProps {
   players: Player[];
   targetScore: number;
   mode: GameMode;
+  roundNumber: number;
   language: 'ar' | 'en';
 }
 
@@ -13,6 +14,7 @@ export const ScoreBoardComponent: React.FC<ScoreBoardProps> = ({
   players,
   targetScore,
   mode,
+  roundNumber,
   language,
 }) => {
   const isArabic = language === 'ar';
@@ -26,18 +28,24 @@ export const ScoreBoardComponent: React.FC<ScoreBoardProps> = ({
         <div className="notebook-header">
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <BookOpen size={16} />
-            {isArabic ? 'دفتر الحساب (2 ضد 2)' : 'Score Ledger (2v2)'}
+            {isArabic ? `الجولة ${roundNumber}` : `Round ${roundNumber}`}
           </span>
           <span style={{ fontSize: '0.8rem', color: '#555' }}>🎯 {targetScore}</span>
         </div>
 
         <div className="player-score-row" style={{ color: '#268bd2' }}>
-          <span>{isArabic ? 'فريق 1 (أنت)' : 'Team 1 (You)'}</span>
+          <span>
+            {players.filter((p) => p.team === 1).map((p) => p.avatar).join(' ')}
+            {isArabic ? ' فريق 1' : ' Team 1'}
+          </span>
           <span>{team1Score} pt</span>
         </div>
 
         <div className="player-score-row" style={{ color: '#dc322f' }}>
-          <span>{isArabic ? 'فريق 2 (المنافسين)' : 'Team 2 (Opponents)'}</span>
+          <span>
+            {players.filter((p) => p.team === 2).map((p) => p.avatar).join(' ')}
+            {isArabic ? ' فريق 2' : ' Team 2'}
+          </span>
           <span>{team2Score} pt</span>
         </div>
       </div>
@@ -49,7 +57,7 @@ export const ScoreBoardComponent: React.FC<ScoreBoardProps> = ({
       <div className="notebook-header">
         <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <BookOpen size={16} />
-          {isArabic ? 'دفتر الحساب' : 'Score Ledger'}
+          {isArabic ? `الجولة ${roundNumber}` : `Round ${roundNumber}`}
         </span>
         <span style={{ fontSize: '0.8rem', color: '#555' }}>🎯 {targetScore}</span>
       </div>

@@ -19,14 +19,19 @@ import {
   isDoubleTile,
 } from './utils/dominoRules';
 import { soundEngine } from './utils/soundEngine';
-import { multiplayerManager, type RoomMessage } from './utils/multiplayer';
+import { multiplayerManager } from './utils/multiplayer';
+import type { RoomMessage } from './utils/multiplayer';
+import { getProfile, updateStats } from './utils/playerProfile';
+import type { PlayerProfile as ProfileType } from './utils/playerProfile';
 import { TableComponent } from './components/Table';
 import { HandComponent } from './components/Hand';
+import { TableLayout } from './components/TableLayout';
 import { IstikanTeaComponent } from './components/IstikanTea';
 import { ScoreBoardComponent } from './components/ScoreBoard';
 import { BotBannerComponent } from './components/BotBanner';
 import { LobbyComponent } from './components/Lobby';
 import { WaitingRoomComponent } from './components/WaitingRoom';
+import { ProfileSetup } from './components/ProfileSetup';
 import { Volume2, VolumeX, RotateCcw, Home, Sparkles, Radio, Copy, Check, Users } from 'lucide-react';
 import './styles/chaikhana.css';
 
@@ -51,6 +56,11 @@ export const App: React.FC = () => {
   const [onlineStatusText, setOnlineStatusText] = useState<string>('');
   const [copiedCode, setCopiedCode] = useState(false);
   const [myPlayerId, setMyPlayerId] = useState<string>('p0');
+  const [lastPlayedTileId, setLastPlayedTileId] = useState<string | null>(null);
+  const [turnToast, setTurnToast] = useState<string | null>(null);
+
+  // Profile state
+  const [playerProfile, setPlayerProfile] = useState<ProfileType | null>(getProfile());
 
   const [activeBotDialogue, setActiveBotDialogue] = useState<{
     botNameAr: string;
@@ -67,7 +77,7 @@ export const App: React.FC = () => {
     currentTurnIndex: 0,
     board: { tiles: [], leftEnd: null, rightEnd: null },
     boneyard: [],
-    status: 'lobby',
+    status: playerProfile ? 'lobby' : 'profile',
     roundNumber: 1,
     openingPlayerIndex: 0,
     firstTilePlayed: false,
@@ -95,7 +105,7 @@ export const App: React.FC = () => {
         const guestName = msg.senderName || 'Guest';
         setGameState((prev) => {
           const emptySlotIndex = prev.players.findIndex((p) => !p.isConnected);
-          let updatedPlayers = [...prev.players];
+          const updatedPlayers = [...prev.players];
           let assignedSlotId = 'p1';
 
           if (emptySlotIndex !== -1) {
@@ -111,7 +121,6 @@ export const App: React.FC = () => {
 
           const newState = { ...prev, players: updatedPlayers };
 
-          // Respond to joining guest with assigned slot ID & state
           multiplayerManager.broadcastMessage('ASSIGN_SLOT', {
             targetPeerId: msg.senderId,
             slotId: assignedSlotId,
@@ -132,6 +141,22 @@ export const App: React.FC = () => {
     };
   }, []);
 
+  // Turn toast effect
+  useEffect(() => {
+    if (gameState.status !== 'playing') return;
+    const cp = gameState.players[gameState.currentTurnIndex];
+    if (!cp) return;
+
+    const isArabic = language === 'ar';
+    const toastText = isArabic
+      ? `${cp.avatar} دور ${cp.nameAr}`
+      : `${cp.avatar} ${cp.name}'s turn`;
+    setTurnToast(toastText);
+
+    const timer = setTimeout(() => setTurnToast(null), 1800);
+    return () => clearTimeout(timer);
+  }, [gameState.currentTurnIndex, gameState.status]);
+
   // Broadcast state changes if Host
   const updateAndBroadcastState = (updater: (prev: GameState) => GameState) => {
     setGameState((prev) => {
@@ -143,6 +168,12 @@ export const App: React.FC = () => {
     });
   };
 
+  // Handle profile ready
+  const handleProfileReady = (profile: ProfileType) => {
+    setPlayerProfile(profile);
+    setGameState((prev) => ({ ...prev, status: 'lobby' }));
+  };
+
   // Start New Game Match
   const startNewMatch = (
     mode: GameMode,
@@ -152,6 +183,7 @@ export const App: React.FC = () => {
     isJoiningRoom?: boolean,
     onlinePlayerCount: 2 | 3 | 4 = 2
   ) => {
+    const avatar = playerProfile?.avatar || '🧔‍♂️';
     let initialPlayers: Player[] = [];
 
     if (mode === 'online') {
@@ -183,7 +215,7 @@ export const App: React.FC = () => {
           isBot: false,
           isConnected: true,
           team: 1,
-          avatar: '🧔‍♂️',
+          avatar,
           score: 0,
         });
 
@@ -193,7 +225,7 @@ export const App: React.FC = () => {
             name: `Waiting for Player ${i + 1}...`,
             nameAr: `بانتظار انضمام اللاعب ${i + 1}...`,
             hand: [],
-            isBot: false, // NOT a bot while waiting!
+            isBot: false,
             isConnected: false,
             team: (i + 1) as 1 | 2 | 3 | 4,
             avatar: i === 1 ? '👳‍♂️' : i === 2 ? '👴' : '👵',
@@ -201,7 +233,6 @@ export const App: React.FC = () => {
           });
         }
 
-        // Host enters waiting lobby
         const waitingState: GameState = {
           mode: 'online',
           targetScore,
@@ -226,185 +257,81 @@ export const App: React.FC = () => {
       setMyPlayerId('p0');
       initialPlayers = [
         {
-          id: 'p0',
-          name: playerName,
-          nameAr: playerName,
-          hand: [],
-          isBot: false,
-          isConnected: true,
-          team: 1,
-          avatar: '🧔‍♂️',
-          score: 0,
+          id: 'p0', name: playerName, nameAr: playerName, hand: [],
+          isBot: false, isConnected: true, team: 1, avatar, score: 0,
         },
         {
-          id: 'p1',
-          name: 'Abu Jasim',
-          nameAr: 'أبو جاسم',
-          hand: [],
-          isBot: true,
-          isConnected: true,
-          team: 2,
-          avatar: '👳‍♂️',
-          score: 0,
+          id: 'p1', name: 'Abu Jasim', nameAr: 'أبو جاسم', hand: [],
+          isBot: true, isConnected: true, team: 2, avatar: '👳‍♂️', score: 0,
         },
       ];
     } else if (mode === '3_ffa') {
       setMyPlayerId('p0');
       initialPlayers = [
         {
-          id: 'p0',
-          name: playerName,
-          nameAr: playerName,
-          hand: [],
-          isBot: false,
-          isConnected: true,
-          team: 1,
-          avatar: '🧔‍♂️',
-          score: 0,
+          id: 'p0', name: playerName, nameAr: playerName, hand: [],
+          isBot: false, isConnected: true, team: 1, avatar, score: 0,
         },
         {
-          id: 'p1',
-          name: 'Abu Jasim',
-          nameAr: 'أبو جاسم',
-          hand: [],
-          isBot: true,
-          isConnected: true,
-          team: 2,
-          avatar: '👳‍♂️',
-          score: 0,
+          id: 'p1', name: 'Abu Jasim', nameAr: 'أبو جاسم', hand: [],
+          isBot: true, isConnected: true, team: 2, avatar: '👳‍♂️', score: 0,
         },
         {
-          id: 'p2',
-          name: 'Hajji Raad',
-          nameAr: 'الحجي أبو رعد',
-          hand: [],
-          isBot: true,
-          isConnected: true,
-          team: 3,
-          avatar: '👴',
-          score: 0,
+          id: 'p2', name: 'Hajji Raad', nameAr: 'الحجي أبو رعد', hand: [],
+          isBot: true, isConnected: true, team: 3, avatar: '👴', score: 0,
         },
       ];
     } else if (mode === '2v2') {
       setMyPlayerId('p0');
       initialPlayers = [
         {
-          id: 'p0',
-          name: playerName,
-          nameAr: playerName,
-          hand: [],
-          isBot: false,
-          isConnected: true,
-          team: 1,
-          avatar: '🧔‍♂️',
-          score: 0,
+          id: 'p0', name: playerName, nameAr: playerName, hand: [],
+          isBot: false, isConnected: true, team: 1, avatar, score: 0,
         },
         {
-          id: 'p1',
-          name: 'Abu Jasim',
-          nameAr: 'أبو جاسم',
-          hand: [],
-          isBot: true,
-          isConnected: true,
-          team: 2,
-          avatar: '👳‍♂️',
-          score: 0,
+          id: 'p1', name: 'Abu Jasim', nameAr: 'أبو جاسم', hand: [],
+          isBot: true, isConnected: true, team: 2, avatar: '👳‍♂️', score: 0,
         },
         {
-          id: 'p2',
-          name: 'Hajji Raad',
-          nameAr: 'الحجي أبو رعد',
-          hand: [],
-          isBot: true,
-          isConnected: true,
-          team: 1,
-          avatar: '👴',
-          score: 0,
+          id: 'p2', name: 'Hajji Raad', nameAr: 'الحجي أبو رعد', hand: [],
+          isBot: true, isConnected: true, team: 1, avatar: '👴', score: 0,
         },
         {
-          id: 'p3',
-          name: 'Um Fahad',
-          nameAr: 'أم فهد',
-          hand: [],
-          isBot: true,
-          isConnected: true,
-          team: 2,
-          avatar: '👵',
-          score: 0,
+          id: 'p3', name: 'Um Fahad', nameAr: 'أم فهد', hand: [],
+          isBot: true, isConnected: true, team: 2, avatar: '👵', score: 0,
         },
       ];
     } else if (mode === '4_ffa') {
       setMyPlayerId('p0');
       initialPlayers = [
         {
-          id: 'p0',
-          name: playerName,
-          nameAr: playerName,
-          hand: [],
-          isBot: false,
-          isConnected: true,
-          team: 1,
-          avatar: '🧔‍♂️',
-          score: 0,
+          id: 'p0', name: playerName, nameAr: playerName, hand: [],
+          isBot: false, isConnected: true, team: 1, avatar, score: 0,
         },
         {
-          id: 'p1',
-          name: 'Abu Jasim',
-          nameAr: 'أبو جاسم',
-          hand: [],
-          isBot: true,
-          isConnected: true,
-          team: 2,
-          avatar: '👳‍♂️',
-          score: 0,
+          id: 'p1', name: 'Abu Jasim', nameAr: 'أبو جاسم', hand: [],
+          isBot: true, isConnected: true, team: 2, avatar: '👳‍♂️', score: 0,
         },
         {
-          id: 'p2',
-          name: 'Hajji Raad',
-          nameAr: 'الحجي أبو رعد',
-          hand: [],
-          isBot: true,
-          isConnected: true,
-          team: 3,
-          avatar: '👴',
-          score: 0,
+          id: 'p2', name: 'Hajji Raad', nameAr: 'الحجي أبو رعد', hand: [],
+          isBot: true, isConnected: true, team: 3, avatar: '👴', score: 0,
         },
         {
-          id: 'p3',
-          name: 'Um Fahad',
-          nameAr: 'أم فهد',
-          hand: [],
-          isBot: true,
-          isConnected: true,
-          team: 4,
-          avatar: '👵',
-          score: 0,
+          id: 'p3', name: 'Um Fahad', nameAr: 'أم فهد', hand: [],
+          isBot: true, isConnected: true, team: 4, avatar: '👵', score: 0,
         },
       ];
     } else {
+      // pass & play
       setMyPlayerId('p0');
       initialPlayers = [
         {
-          id: 'p0',
-          name: `${playerName} 1`,
-          nameAr: `${playerName} 1`,
-          hand: [],
-          isBot: false,
-          isConnected: true,
-          team: 1,
-          avatar: '🧔‍♂️',
-          score: 0,
+          id: 'p0', name: `${playerName} 1`, nameAr: `${playerName} 1`, hand: [],
+          isBot: false, isConnected: true, team: 1, avatar, score: 0,
         },
         {
-          id: 'p1',
-          name: 'Player 2',
-          nameAr: 'اللاعب 2',
-          hand: [],
-          isBot: false,
-          isConnected: true,
-          team: 2,
-          avatar: '👨‍🦱',
-          score: 0,
+          id: 'p1', name: 'Player 2', nameAr: 'اللاعب 2', hand: [],
+          isBot: false, isConnected: true, team: 2, avatar: '👨‍🦱', score: 0,
         },
       ];
     }
@@ -414,7 +341,6 @@ export const App: React.FC = () => {
 
   // Launch Game from Online Waiting Room
   const handleHostLaunchOnlineMatch = () => {
-    // Fill any disconnected slots with AI Bots
     const finalPlayers = gameState.players.map((p, idx) => {
       if (!p.isConnected) {
         return {
@@ -439,6 +365,7 @@ export const App: React.FC = () => {
     roundNum: number
   ) => {
     soundEngine.playTileShuffle();
+    setLastPlayedTileId(null);
     const fullDeck = shuffleDeck(generateFullDeck());
 
     const updatedPlayers = playersList.map((p) => ({
@@ -449,7 +376,6 @@ export const App: React.FC = () => {
 
     let boneyard: TileType[] = [];
 
-    // Deal 7 tiles to each player
     updatedPlayers.forEach((p, idx) => {
       p.hand = fullDeck.slice(idx * 7, (idx + 1) * 7);
     });
@@ -501,7 +427,6 @@ export const App: React.FC = () => {
       ? currentPlayer?.id === myPlayerId
       : !currentPlayer?.isBot;
 
-  // Get valid moves for current player
   const validMoves = currentPlayer
     ? getValidMoves(
         currentPlayer.hand,
@@ -569,6 +494,7 @@ export const App: React.FC = () => {
     }
 
     soundEngine.playTileSlam();
+    setLastPlayedTileId(tile.id);
 
     const newPlayedTile: PlayedTile = {
       tile,
@@ -743,6 +669,15 @@ export const App: React.FC = () => {
       (p) => p.score >= gameState.targetScore
     );
 
+    // Track stats for the human player
+    const myPlayer = updatedPlayers.find((p) => p.id === myPlayerId);
+    if (matchWinnerPlayer && myPlayer) {
+      const iWon = matchWinnerPlayer.id === myPlayerId ||
+        (gameState.mode === '2v2' && matchWinnerPlayer.team === myPlayer.team);
+      updateStats(iWon);
+      setPlayerProfile(getProfile());
+    }
+
     updateAndBroadcastState((prev) => ({
       ...prev,
       players: updatedPlayers,
@@ -792,7 +727,7 @@ export const App: React.FC = () => {
     handleRoundWin(winningPlayer, 'blocked', currentPlayers);
   };
 
-  // Bot Turn Automation Effect (ONLY fires during 'playing' status for actual bots!)
+  // Bot Turn Automation Effect
   useEffect(() => {
     if (gameState.status !== 'playing') return;
     if (!currentPlayer || !currentPlayer.isBot) return;
@@ -896,10 +831,21 @@ export const App: React.FC = () => {
 
   return (
     <div className="chaikhana-app">
+      {/* Profile Setup */}
+      {gameState.status === 'profile' && (
+        <ProfileSetup
+          onProfileReady={handleProfileReady}
+          existingProfile={playerProfile}
+          language={language}
+        />
+      )}
+
       {/* Lobby Overlay */}
-      {gameState.status === 'lobby' && (
+      {gameState.status === 'lobby' && playerProfile && (
         <LobbyComponent
+          profile={playerProfile}
           onStartGame={startNewMatch}
+          onEditProfile={() => setGameState((prev) => ({ ...prev, status: 'profile' }))}
           language={language}
           onToggleLanguage={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
         />
@@ -1001,29 +947,60 @@ export const App: React.FC = () => {
         )}
 
         {/* Score Ledger Notebook */}
-        {gameState.status !== 'lobby' && gameState.status !== 'waiting' && (
+        {gameState.status !== 'lobby' && gameState.status !== 'waiting' && gameState.status !== 'profile' && (
           <ScoreBoardComponent
             players={gameState.players}
             targetScore={gameState.targetScore}
             mode={gameState.mode}
+            roundNumber={gameState.roundNumber}
             language={language}
           />
         )}
 
-        {/* Domino Snake Table */}
-        <TableComponent
-          board={gameState.board}
-          selectedTile={selectedTile}
-          validPositions={
-            selectedTile
-              ? validMoves
-                  .filter((m) => m.tile.id === selectedTile.id)
-                  .map((m) => m.position)
-              : []
-          }
-          onPlayTile={handleTilePlacementAction}
-          language={language}
-        />
+        {/* Table Layout with Opponent Seats */}
+        {gameState.status === 'playing' && gameState.players.length > 0 ? (
+          <TableLayout
+            players={gameState.players}
+            myPlayerId={myPlayerId}
+            currentTurnIndex={gameState.currentTurnIndex}
+            language={language}
+          >
+            <TableComponent
+              board={gameState.board}
+              selectedTile={selectedTile}
+              validPositions={
+                selectedTile
+                  ? validMoves
+                      .filter((m) => m.tile.id === selectedTile.id)
+                      .map((m) => m.position)
+                  : []
+              }
+              onPlayTile={handleTilePlacementAction}
+              language={language}
+              lastPlayedTileId={lastPlayedTileId || undefined}
+            />
+          </TableLayout>
+        ) : (
+          <TableComponent
+            board={gameState.board}
+            selectedTile={selectedTile}
+            validPositions={
+              selectedTile
+                ? validMoves
+                    .filter((m) => m.tile.id === selectedTile.id)
+                    .map((m) => m.position)
+                : []
+            }
+            onPlayTile={handleTilePlacementAction}
+            language={language}
+            lastPlayedTileId={lastPlayedTileId || undefined}
+          />
+        )}
+
+        {/* Turn Toast */}
+        {turnToast && gameState.status === 'playing' && (
+          <div className="turn-toast">{turnToast}</div>
+        )}
 
         {/* Interactive Iraqi Tea Glass */}
         <IstikanTeaComponent language={language} />
