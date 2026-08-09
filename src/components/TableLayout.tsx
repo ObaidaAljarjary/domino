@@ -6,6 +6,7 @@ interface TableLayoutProps {
   myPlayerId: string;
   currentTurnIndex: number;
   language: Language;
+  activeEmotes?: { id: string; senderId: string; emote: string }[];
   children: React.ReactNode;
 }
 
@@ -50,6 +51,7 @@ export const TableLayout: React.FC<TableLayoutProps> = ({
   myPlayerId,
   currentTurnIndex,
   language,
+  activeEmotes = [],
   children
 }) => {
   const myIndex = players.findIndex(p => p.id === myPlayerId);
@@ -79,9 +81,16 @@ export const TableLayout: React.FC<TableLayoutProps> = ({
     
     return (
       <>
-        <div className="seat-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div className="seat-avatar" style={{ fontSize: '2.5rem', lineHeight: '1' }}>
+        <div className="seat-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+          <div className="seat-avatar" style={{ fontSize: '2.5rem', lineHeight: '1', position: 'relative' }}>
             {player.avatar || '👤'}
+            {activeEmotes
+              .filter((e) => e.senderId === player.id)
+              .map((e) => (
+                <div key={e.id} className="floating-emote" style={{ bottom: '100%', left: '50%', transform: 'translateX(-50%)' }}>
+                  {e.emote}
+                </div>
+              ))}
           </div>
           <div className="seat-name" style={{ fontWeight: 'bold', textShadow: '1px 1px 2px rgba(0,0,0,0.5)', color: 'white' }}>
             {language === 'ar' && player.nameAr ? player.nameAr : player.name}

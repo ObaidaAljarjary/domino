@@ -32,6 +32,7 @@ import { BotBannerComponent } from './components/BotBanner';
 import { LobbyComponent } from './components/Lobby';
 import { WaitingRoomComponent } from './components/WaitingRoom';
 import { ProfileSetup } from './components/ProfileSetup';
+import { ChatBox } from './components/ChatBox';
 import { Volume2, VolumeX, RotateCcw, Home, Sparkles, Radio, Copy, Check, Users } from 'lucide-react';
 import './styles/chaikhana.css';
 
@@ -70,6 +71,8 @@ export const App: React.FC = () => {
     messageEn: string;
   } | null>(null);
 
+  const [activeEmotes, setActiveEmotes] = useState<{ id: string; senderId: string; emote: string }[]>([]);
+
   const [gameState, setGameState] = useState<GameState>({
     mode: '1v1',
     targetScore: 101,
@@ -85,6 +88,16 @@ export const App: React.FC = () => {
     chatMessages: [],
     roundWinner: null,
     matchWinner: null,
+  });
+
+  const executePlayTileRef = useRef<any>(null);
+  const handleDrawTileRef = useRef<any>(null);
+  const handlePassTurnRef = useRef<any>(null);
+
+  useEffect(() => {
+    executePlayTileRef.current = executePlayTile;
+    handleDrawTileRef.current = handleDrawTile;
+    handlePassTurnRef.current = handlePassTurn;
   });
 
   // Handle Online Room Status & Incoming Messages
@@ -132,11 +145,27 @@ export const App: React.FC = () => {
         });
       } else if (msg.type === 'PLAY_TILE_ACTION' && multiplayerManager.isHost) {
         const { tile, position } = msg.payload;
-        executePlayTile(tile, position);
+        executePlayTileRef.current?.(tile, position);
       } else if (msg.type === 'DRAW_TILE_ACTION' && multiplayerManager.isHost) {
-        handleDrawTile();
+        handleDrawTileRef.current?.();
       } else if (msg.type === 'PASS_TURN_ACTION' && multiplayerManager.isHost) {
-        handlePassTurn();
+        handlePassTurnRef.current?.();
+      } else if (msg.type === 'CHAT_MESSAGE') {
+        setGameState((prev) => ({
+          ...prev,
+          chatMessages: [...prev.chatMessages, msg.payload],
+        }));
+      } else if (msg.type === 'EMOTE_ACTION') {
+        const { senderId, emote } = msg.payload;
+        
+        const emoteObj = { id: Date.now().toString() + Math.random(), senderId, emote };
+        setActiveEmotes(prev => [...prev, emoteObj]);
+        setTimeout(() => {
+          setActiveEmotes(prev => prev.filter(e => e.id !== emoteObj.id));
+        }, 2000);
+
+        // Still trigger event in case other components need it
+        window.dispatchEvent(new CustomEvent('player-emote', { detail: { senderId, emote } }));
       }
     };
   }, []);
@@ -742,7 +771,49 @@ export const App: React.FC = () => {
     handleRoundWin(winningPlayer, 'blocked', currentPlayers);
   };
 
-  // Bot Turn Automation Effect (fires on turn start, and re-fires after drawing until bot plays or passes)
+  const handleSendChatMessage = (text: string) => {
+    if (gameState.mode !== 'online') return;
+    const msg: ChatMessage = {
+      id: `${myPlayerId}-${Date.now()}`,
+      sender: myPlayerId,
+      senderAr: myPlayerId, // Or look up actual name
+      text,
+      textAr: text,
+      time: new Date().toISOString(),
+    };
+    
+    // Find my actual name to display
+    const myPlayer = gameState.players.find(p => p.id === myPlayerId);
+    if (myPlayer) {
+      msg.sender = myPlayer.name;
+      msg.senderAr = myPlayer.nameAr;
+    }
+
+    multiplayerManager.broadcastMessage('CHAT_MESSAGE', msg);
+    
+    // Add locally
+    setGameState(prev => ({
+      ...prev,
+      chatMessages: [...prev.chatMessages, msg]
+    }));
+  };
+
+  const handleSendEmote = (emote: string) => {
+    if (gameState.mode !== 'online') return;
+    multiplayerManager.broadcastMessage('EMOTE_ACTION', { senderId: myPlayerId, emote });
+    
+    // Add locally
+    const emoteObj = { id: Date.now().toString() + Math.random(), senderId: myPlayerId, emote };
+    setActiveEmotes(prev => [...prev, emoteObj]);
+    setTimeout(() => {
+      setActiveEmotes(prev => prev.filter(e => e.id !== emoteObj.id));
+    }, 2000);
+
+    // Trigger locally
+    window.dispatchEvent(new CustomEvent('player-emote', { detail: { senderId: myPlayerId, emote } }));
+  };
+
+  // Bot automation effect (fires on turn start, and re-fires after drawing until bot plays or passes)
   useEffect(() => {
     if (gameState.status !== 'playing') return;
     if (gameState.mode === 'online' && !multiplayerManager.isHost) return;
@@ -987,6 +1058,7 @@ export const App: React.FC = () => {
             myPlayerId={myPlayerId}
             currentTurnIndex={gameState.currentTurnIndex}
             language={language}
+            activeEmotes={activeEmotes}
           >
             <TableComponent
               board={gameState.board}
@@ -1127,6 +1199,17 @@ export const App: React.FC = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Render ChatBox if we are online */}
+      {gameState.mode === 'online' && (
+        <ChatBox 
+          messages={gameState.chatMessages} 
+          onSendMessage={handleSendChatMessage}
+          onSendEmote={handleSendEmote}
+          language={language}
+          myPlayerId={myPlayerId}
+        />
       )}
     </div>
   );

@@ -998,17 +998,221 @@ html, body, #root {
   border: 2px solid transparent;
   background: rgba(255,255,255,0.05);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s;
 }
 
 .avatar-option:hover {
-  background: rgba(229, 184, 66, 0.2);
+  background: rgba(255,255,255,0.15);
   transform: scale(1.1);
 }
 
 .avatar-option.selected {
   border-color: var(--gold-accent);
-  background: rgba(229, 184, 66, 0.25);
-  box-shadow: 0 0 12px var(--gold-glow);
-  transform: scale(1.15);
+  background: rgba(229, 184, 66, 0.2);
+  transform: scale(1.1);
+  box-shadow: 0 0 10px var(--gold-glow);
+}
+
+/* Chat & Emotes Styles */
+.chat-toggle-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: var(--button-gradient);
+  color: #fff;
+  border: 1px solid var(--gold-accent);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  z-index: 100;
+  transition: transform 0.2s;
+}
+
+.chat-toggle-btn:hover {
+  transform: scale(1.1);
+}
+
+.chat-box-container {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 320px;
+  height: 400px;
+  background: rgba(43, 24, 16, 0.95);
+  border: 2px solid var(--gold-accent);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+  z-index: 100;
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(229, 184, 66, 0.3);
+}
+
+.chat-box-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--gold-accent);
+}
+
+.chat-box-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-empty-state {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  margin: auto;
+  font-style: italic;
+}
+
+.chat-message {
+  display: flex;
+  flex-direction: column;
+  max-width: 85%;
+}
+
+.chat-message.mine {
+  align-self: flex-end;
+}
+
+.chat-message.theirs {
+  align-self: flex-start;
+}
+
+.chat-sender {
+  font-size: 0.75rem;
+  color: var(--gold-accent);
+  margin-bottom: 2px;
+  opacity: 0.8;
+}
+
+.chat-bubble {
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  word-wrap: break-word;
+}
+
+.chat-message.mine .chat-bubble {
+  background: rgba(229, 184, 66, 0.2);
+  border-color: rgba(229, 184, 66, 0.4);
+}
+
+.chat-box-input-area {
+  display: flex;
+  padding: 10px;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(229, 184, 66, 0.3);
+  align-items: center;
+}
+
+.chat-input-form {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+}
+
+.chat-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 0.9rem;
+  outline: none;
+  font-family: inherit;
+}
+
+.chat-input:focus {
+  border-color: var(--gold-accent);
+}
+
+.emote-btn {
+  padding: 8px;
+}
+
+.send-btn {
+  padding: 8px;
+  color: var(--gold-accent);
+}
+
+.send-btn:disabled {
+  color: rgba(255, 255, 255, 0.3);
+  cursor: not-allowed;
+}
+
+.emote-picker {
+  position: absolute;
+  bottom: 45px;
+  left: 0;
+  background: rgba(30, 16, 12, 0.95);
+  border: 1px solid var(--gold-accent);
+  border-radius: 12px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+  z-index: 101;
+}
+
+.emote-picker button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.emote-picker button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.2);
+}
+
+/* Floating Emote Animation */
+.floating-emote {
+  position: absolute;
+  font-size: 2.5rem;
+  pointer-events: none;
+  z-index: 100;
+  animation: floatUpEmote 2s ease-out forwards;
+}
+
+@keyframes floatUpEmote {
+  0% { opacity: 0; transform: translateY(10px) scale(0.5); }
+  20% { opacity: 1; transform: translateY(-20px) scale(1.2); }
+  80% { opacity: 1; transform: translateY(-50px) scale(1); }
+  100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
 }

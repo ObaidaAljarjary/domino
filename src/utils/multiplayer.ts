@@ -9,7 +9,9 @@ export interface RoomMessage {
     | 'PLAY_TILE_ACTION'
     | 'DRAW_TILE_ACTION'
     | 'PASS_TURN_ACTION'
-    | 'START_GAME';
+    | 'START_GAME'
+    | 'CHAT_MESSAGE'
+    | 'EMOTE_ACTION';
   payload: any;
   senderId: string;
   senderName?: string;

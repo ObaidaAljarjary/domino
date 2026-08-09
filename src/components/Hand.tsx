@@ -17,6 +17,7 @@ interface HandProps {
   canPass: boolean;
   boneyardCount: number;
   language: 'ar' | 'en';
+  activeEmotes?: { id: string; senderId: string; emote: string }[];
 }
 
 export const HandComponent: React.FC<HandProps> = ({
@@ -33,13 +34,23 @@ export const HandComponent: React.FC<HandProps> = ({
   canPass,
   boneyardCount,
   language,
+  activeEmotes = [],
 }) => {
   const isArabic = language === 'ar';
 
   return (
     <div className="bottom-hand-bar">
       <div className="player-info-tag">
-        <span>{player.avatar}</span>
+        <span style={{ position: 'relative' }}>
+          {player.avatar}
+          {activeEmotes
+            .filter((e) => e.senderId === player.id)
+            .map((e) => (
+              <div key={e.id} className="floating-emote" style={{ bottom: '100%', left: '50%', transform: 'translateX(-50%)' }}>
+                {e.emote}
+              </div>
+            ))}
+        </span>
         <span>{isArabic ? player.nameAr : player.name}</span>
 
         {isCurrentTurn && (
