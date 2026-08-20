@@ -157,6 +157,9 @@ export class MultiplayerRoomManager {
       }
     };
 
+    // Fallback: If neither WebRTC nor WebSocket connect quickly, force connection to utilize BroadcastChannel or retry logic
+    setTimeout(safeOnConnected, 2000);
+
     // 1. ALWAYS open WebSocket Relay in parallel
     this.setupAlwaysOnRelay(this.roomCode, safeOnConnected);
 
