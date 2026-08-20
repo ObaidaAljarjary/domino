@@ -55,6 +55,16 @@ export const TileComponent: React.FC<TileProps> = ({
         'pip-bottom-left',
         'pip-bottom-right'
       );
+    } else if (val === 7) {
+      pips.push(
+        'pip-top-left',
+        'pip-top-right',
+        'pip-mid-left',
+        'pip-mid-right',
+        'pip-bottom-left',
+        'pip-bottom-right',
+        'pip-center'
+      );
     }
 
     return pips.map((pipClass, idx) => (

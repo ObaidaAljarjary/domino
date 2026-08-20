@@ -32,7 +32,7 @@ export interface Player {
   nameAr: string;
   hand: Tile[];
   isBot: boolean;
-  team: 1 | 2 | 3 | 4;
+  team: 1 | 2 | 3 | 4 | 5 | 6;
   avatar: string;
   score: number;
   isPassed?: boolean;
@@ -40,7 +40,7 @@ export interface Player {
   profileId?: string;
 }
 
-export type GameMode = '1v1' | '3_ffa' | '2v2' | '4_ffa' | 'pass_play' | 'online';
+export type GameMode = '1v1' | '3_ffa' | '2v2' | '4_ffa' | '5_ffa' | '6_ffa' | 'pass_play' | 'online';
 export type Language = 'ar' | 'en';
 
 export interface GameBoard {
@@ -61,7 +61,7 @@ export interface ChatMessage {
 
 export interface GameState {
   mode: GameMode;
-  onlineSubMode?: '1v1' | '3_ffa' | '2v2' | '4_ffa';
+  onlineSubMode?: '1v1' | '3_ffa' | '2v2' | '4_ffa' | '5_ffa' | '6_ffa';
   targetScore: number;
   players: Player[];
   currentTurnIndex: number;

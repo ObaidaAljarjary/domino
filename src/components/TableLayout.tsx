@@ -57,7 +57,9 @@ export const TableLayout: React.FC<TableLayoutProps> = ({
   const myIndex = players.findIndex(p => p.id === myPlayerId);
   
   let leftPlayer: Player | undefined;
+  let topLeftPlayer: Player | undefined;
   let topPlayer: Player | undefined;
+  let topRightPlayer: Player | undefined;
   let rightPlayer: Player | undefined;
 
   if (myIndex !== -1) {
@@ -67,14 +69,25 @@ export const TableLayout: React.FC<TableLayoutProps> = ({
     } else if (numPlayers === 3) {
       leftPlayer = players[(myIndex + 1) % 3];
       topPlayer = players[(myIndex + 2) % 3];
-    } else if (numPlayers >= 4) {
-      leftPlayer = players[(myIndex + 1) % numPlayers];
-      topPlayer = players[(myIndex + 2) % numPlayers];
-      rightPlayer = players[(myIndex + 3) % numPlayers];
+    } else if (numPlayers === 4) {
+      leftPlayer = players[(myIndex + 1) % 4];
+      topPlayer = players[(myIndex + 2) % 4];
+      rightPlayer = players[(myIndex + 3) % 4];
+    } else if (numPlayers === 5) {
+      leftPlayer = players[(myIndex + 1) % 5];
+      topLeftPlayer = players[(myIndex + 2) % 5];
+      topRightPlayer = players[(myIndex + 3) % 5];
+      rightPlayer = players[(myIndex + 4) % 5];
+    } else if (numPlayers === 6) {
+      leftPlayer = players[(myIndex + 1) % 6];
+      topLeftPlayer = players[(myIndex + 2) % 6];
+      topPlayer = players[(myIndex + 3) % 6];
+      topRightPlayer = players[(myIndex + 4) % 6];
+      rightPlayer = players[(myIndex + 5) % 6];
     }
   }
 
-  const renderSeatContent = (player: Player, position: 'top' | 'left' | 'right') => {
+  const renderSeatContent = (player: Player, position: 'top' | 'left' | 'right' | 'topLeft' | 'topRight') => {
     const isVertical = position === 'left' || position === 'right';
     const tileStyle = isVertical ? faceDownTileVerticalStyle : faceDownTileStyle;
     const tileClassName = isVertical ? 'face-down-tile-vertical' : 'face-down-tile';
@@ -129,11 +142,27 @@ export const TableLayout: React.FC<TableLayoutProps> = ({
     return currentTurnIndex === playerIndex;
   };
 
+  const hasTopRow = topPlayer || topLeftPlayer || topRightPlayer;
+
   return (
     <div className="table-layout">
-      {topPlayer && (
-        <div className={`table-seat seat-top ${isPlayerActive(topPlayer) ? 'seat-active-turn' : ''}`}>
-          {renderSeatContent(topPlayer, 'top')}
+      {hasTopRow && (
+        <div className="table-top-row" style={{ display: 'flex', justifyContent: 'center', gap: '20px', padding: '6px 16px', background: 'rgba(27, 15, 11, 0.6)', borderBottom: '2px solid rgba(109, 57, 37, 0.4)' }}>
+          {topLeftPlayer && (
+            <div className={`table-seat seat-top ${isPlayerActive(topLeftPlayer) ? 'seat-active-turn' : ''}`} style={{ flex: 1, padding: 0, border: 'none', background: 'none' }}>
+              {renderSeatContent(topLeftPlayer, 'topLeft')}
+            </div>
+          )}
+          {topPlayer && (
+            <div className={`table-seat seat-top ${isPlayerActive(topPlayer) ? 'seat-active-turn' : ''}`} style={{ flex: 1, padding: 0, border: 'none', background: 'none' }}>
+              {renderSeatContent(topPlayer, 'top')}
+            </div>
+          )}
+          {topRightPlayer && (
+            <div className={`table-seat seat-top ${isPlayerActive(topRightPlayer) ? 'seat-active-turn' : ''}`} style={{ flex: 1, padding: 0, border: 'none', background: 'none' }}>
+              {renderSeatContent(topRightPlayer, 'topRight')}
+            </div>
+          )}
         </div>
       )}
       

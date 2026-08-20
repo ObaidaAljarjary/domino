@@ -211,7 +211,7 @@ export const App: React.FC = () => {
     targetScore: number,
     roomCodeInput?: string,
     isJoiningRoom?: boolean,
-    onlineSubMode: '1v1' | '3_ffa' | '2v2' | '4_ffa' = '1v1'
+    onlineSubMode: '1v1' | '3_ffa' | '2v2' | '4_ffa' | '5_ffa' | '6_ffa' = '1v1'
   ) => {
     const avatar = playerProfile?.avatar || '🧔‍♂️';
     let initialPlayers: Player[] = [];
@@ -240,9 +240,11 @@ export const App: React.FC = () => {
         let playerCount = 2;
         if (onlineSubMode === '3_ffa') playerCount = 3;
         else if (onlineSubMode === '2v2' || onlineSubMode === '4_ffa') playerCount = 4;
+        else if (onlineSubMode === '5_ffa') playerCount = 5;
+        else if (onlineSubMode === '6_ffa') playerCount = 6;
 
         for (let i = 0; i < playerCount; i++) {
-          let teamNum: 1 | 2 | 3 | 4 = (i + 1) as 1 | 2 | 3 | 4;
+          let teamNum: 1 | 2 | 3 | 4 | 5 | 6 = (i + 1) as 1 | 2 | 3 | 4 | 5 | 6;
           if (onlineSubMode === '2v2') {
             teamNum = (i % 2 === 0 ? 1 : 2);
           }
@@ -363,6 +365,58 @@ export const App: React.FC = () => {
           isBot: true, isConnected: true, team: 4, avatar: '👵', score: 0,
         },
       ];
+    } else if (mode === '5_ffa') {
+      setMyPlayerId('p0');
+      initialPlayers = [
+        {
+          id: 'p0', name: playerName, nameAr: playerName, hand: [],
+          isBot: false, isConnected: true, team: 1, avatar, score: 0,
+        },
+        {
+          id: 'p1', name: 'Abu Jasim', nameAr: 'أبو جاسم', hand: [],
+          isBot: true, isConnected: true, team: 2, avatar: '👳‍♂️', score: 0,
+        },
+        {
+          id: 'p2', name: 'Hajji Raad', nameAr: 'الحجي أبو رعد', hand: [],
+          isBot: true, isConnected: true, team: 3, avatar: '👴', score: 0,
+        },
+        {
+          id: 'p3', name: 'Um Fahad', nameAr: 'أم فهد', hand: [],
+          isBot: true, isConnected: true, team: 4, avatar: '👵', score: 0,
+        },
+        {
+          id: 'p4', name: 'Saad', nameAr: 'سعد', hand: [],
+          isBot: true, isConnected: true, team: 5, avatar: '👨', score: 0,
+        },
+      ];
+    } else if (mode === '6_ffa') {
+      setMyPlayerId('p0');
+      initialPlayers = [
+        {
+          id: 'p0', name: playerName, nameAr: playerName, hand: [],
+          isBot: false, isConnected: true, team: 1, avatar, score: 0,
+        },
+        {
+          id: 'p1', name: 'Abu Jasim', nameAr: 'أبو جاسم', hand: [],
+          isBot: true, isConnected: true, team: 2, avatar: '👳‍♂️', score: 0,
+        },
+        {
+          id: 'p2', name: 'Hajji Raad', nameAr: 'الحجي أبو رعد', hand: [],
+          isBot: true, isConnected: true, team: 3, avatar: '👴', score: 0,
+        },
+        {
+          id: 'p3', name: 'Um Fahad', nameAr: 'أم فهد', hand: [],
+          isBot: true, isConnected: true, team: 4, avatar: '👵', score: 0,
+        },
+        {
+          id: 'p4', name: 'Saad', nameAr: 'سعد', hand: [],
+          isBot: true, isConnected: true, team: 5, avatar: '👨', score: 0,
+        },
+        {
+          id: 'p5', name: 'Ali', nameAr: 'علي', hand: [],
+          isBot: true, isConnected: true, team: 6, avatar: '👨‍🦱', score: 0,
+        },
+      ];
     } else {
       // pass & play
       setMyPlayerId('p0');
@@ -408,7 +462,11 @@ export const App: React.FC = () => {
   ) => {
     soundEngine.playTileShuffle();
     setLastPlayedTileId(null);
-    const fullDeck = shuffleDeck(generateFullDeck());
+    const isExtendedMode = mode === '5_ffa' || mode === '6_ffa' || (mode === 'online' && playersList.length >= 5);
+    const maxPips = isExtendedMode ? 7 : 6;
+    const tilesPerPlayer = (mode === '6_ffa' || (mode === 'online' && playersList.length === 6)) ? 6 : 7;
+    
+    const fullDeck = shuffleDeck(generateFullDeck(maxPips));
 
     const updatedPlayers = playersList.map((p) => ({
       ...p,
@@ -419,20 +477,11 @@ export const App: React.FC = () => {
     let boneyard: TileType[] = [];
 
     updatedPlayers.forEach((p, idx) => {
-      p.hand = fullDeck.slice(idx * 7, (idx + 1) * 7);
+      p.hand = fullDeck.slice(idx * tilesPerPlayer, (idx + 1) * tilesPerPlayer);
     });
 
-    if (mode === '1v1' || mode === 'pass_play') {
-      boneyard = fullDeck.slice(14);
-    } else if (mode === '3_ffa') {
-      boneyard = fullDeck.slice(21);
-    } else if (mode === 'online') {
-      if (updatedPlayers.length === 2) boneyard = fullDeck.slice(14);
-      else if (updatedPlayers.length === 3) boneyard = fullDeck.slice(21);
-      else boneyard = [];
-    } else {
-      boneyard = [];
-    }
+    const usedTiles = updatedPlayers.length * tilesPerPlayer;
+    boneyard = fullDeck.slice(usedTiles);
 
     const openingInfo = findOpeningPlayerIndex(updatedPlayers);
 

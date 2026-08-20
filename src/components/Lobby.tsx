@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { GameMode, Language, PlayerProfile } from '../types/domino';
 import { Users, User, Globe, Trophy, Play, Copy, Check, UserPlus, Settings } from 'lucide-react';
 
-export type OnlineSubMode = '1v1' | '3_ffa' | '2v2' | '4_ffa';
+export type OnlineSubMode = '1v1' | '3_ffa' | '2v2' | '4_ffa' | '5_ffa' | '6_ffa';
 
 interface LobbyProps {
   profile: PlayerProfile;
@@ -58,9 +58,11 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
 
   const onlineOptions: { id: OnlineSubMode; labelAr: string; labelEn: string; icon: string }[] = [
     { id: '1v1', labelAr: '1 ضد 1 (لاعبان)', labelEn: '1v1 (2 Players)', icon: '👤' },
-    { id: '3_ffa', labelAr: '3 لاعبين (فردي)', labelEn: '3 Players (FFA)', icon: '👥' },
-    { id: '2v2', labelAr: '2 ضد 2 (فرق)', labelEn: '2v2 Teams (4 Players)', icon: '⚔️' },
-    { id: '4_ffa', labelAr: '4 لاعبين (فردي)', labelEn: '4 Players (FFA)', icon: '🎮' },
+    { id: '3_ffa', labelAr: '3 لاعبين (كل لنفسه)', labelEn: '3 Players (FFA)', icon: '👥' },
+    { id: '2v2', labelAr: '2 ضد 2 (فريقان)', labelEn: '2v2 Teams', icon: '🤝' },
+    { id: '4_ffa', labelAr: '4 لاعبين (كل لنفسه)', labelEn: '4 Players (FFA)', icon: '🤼' },
+    { id: '5_ffa', labelAr: '5 لاعبين (كل لنفسه)', labelEn: '5 Players (FFA)', icon: '🌍' },
+    { id: '6_ffa', labelAr: '6 لاعبين (كل لنفسه)', labelEn: '6 Players (FFA)', icon: '🔥' },
   ];
 
   return (
@@ -121,6 +123,16 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
             <div className={`mode-card ${mode === '4_ffa' ? 'active' : ''}`} onClick={() => setMode('4_ffa')}>
               <Users size={22} color="var(--gold-accent)" />
               <strong style={{ fontSize: '0.85rem' }}>{isArabic ? '4 لاعبين' : '4 Players'}</strong>
+            </div>
+
+            <div className={`mode-card ${mode === '5_ffa' ? 'active' : ''}`} onClick={() => setMode('5_ffa')}>
+              <Users size={22} color="var(--gold-accent)" />
+              <strong style={{ fontSize: '0.85rem' }}>{isArabic ? '5 لاعبين' : '5 Players'}</strong>
+            </div>
+
+            <div className={`mode-card ${mode === '6_ffa' ? 'active' : ''}`} onClick={() => setMode('6_ffa')}>
+              <Users size={22} color="var(--gold-accent)" />
+              <strong style={{ fontSize: '0.85rem' }}>{isArabic ? '6 لاعبين' : '6 Players'}</strong>
             </div>
 
             <div className={`mode-card ${mode === 'pass_play' ? 'active' : ''}`} onClick={() => setMode('pass_play')}>

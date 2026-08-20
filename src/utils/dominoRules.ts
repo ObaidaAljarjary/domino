@@ -1,11 +1,11 @@
 import type { Tile, PlayPosition, Player } from '../types/domino';
 
-// Generate standard 28-tile Double-Six set
-export function generateFullDeck(): Tile[] {
+// Generate standard 28-tile Double-Six set (or larger, e.g., Double-Seven)
+export function generateFullDeck(maxPips: number = 6): Tile[] {
   const deck: Tile[] = [];
   let idCounter = 0;
-  for (let top = 0; top <= 6; top++) {
-    for (let bottom = top; bottom <= 6; bottom++) {
+  for (let top = 0; top <= maxPips; top++) {
+    for (let bottom = top; bottom <= maxPips; bottom++) {
       deck.push({
         id: `tile-${top}-${bottom}-${idCounter++}`,
         top,

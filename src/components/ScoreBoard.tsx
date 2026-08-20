@@ -6,7 +6,7 @@ interface ScoreBoardProps {
   players: Player[];
   targetScore: number;
   mode: GameMode;
-  onlineSubMode?: '1v1' | '3_ffa' | '2v2' | '4_ffa';
+  onlineSubMode?: '1v1' | '3_ffa' | '2v2' | '4_ffa' | '5_ffa' | '6_ffa';
   roundNumber: number;
   language: 'ar' | 'en';
 }
