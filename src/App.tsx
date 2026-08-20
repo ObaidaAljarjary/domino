@@ -221,6 +221,7 @@ export const App: React.FC = () => {
       setOnlineRoomCode(roomCode);
 
       if (isJoiningRoom) {
+        setGameState((prev) => ({ ...prev, status: 'waiting', mode: 'online' }));
         multiplayerManager.joinRoom(
           roomCode,
           () => {

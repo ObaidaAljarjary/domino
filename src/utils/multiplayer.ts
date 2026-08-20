@@ -255,11 +255,25 @@ export class MultiplayerRoomManager {
     }
 
     // 3. Always-On WebSocket Relay
-    if (this.wsFallback && this.wsFallback.readyState === WebSocket.OPEN) {
-      try {
-        this.wsFallback.send(JSON.stringify(message));
-      } catch {
-        // ignore
+    if (this.wsFallback) {
+      if (this.wsFallback.readyState === WebSocket.OPEN) {
+        try {
+          this.wsFallback.send(JSON.stringify(message));
+        } catch {
+          // ignore
+        }
+      } else if (this.wsFallback.readyState === WebSocket.CONNECTING) {
+        const retryMessage = JSON.stringify(message);
+        const checkAndSend = () => {
+          if (this.wsFallback && this.wsFallback.readyState === WebSocket.OPEN) {
+            try {
+              this.wsFallback.send(retryMessage);
+            } catch {}
+          } else if (this.wsFallback && this.wsFallback.readyState === WebSocket.CONNECTING) {
+            setTimeout(checkAndSend, 500);
+          }
+        };
+        setTimeout(checkAndSend, 500);
       }
     }
   }
