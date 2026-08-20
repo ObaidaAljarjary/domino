@@ -6,7 +6,7 @@ interface ScoreBoardProps {
   players: Player[];
   targetScore: number;
   mode: GameMode;
-  onlineSubMode?: '1v1' | '3_ffa' | '2v2' | '4_ffa' | '5_ffa' | '6_ffa';
+  onlineSubMode?: '1v1' | '3_ffa' | '2v2' | '4_ffa' | '5_ffa' | '6_ffa' | '3v3';
   roundNumber: number;
   language: 'ar' | 'en';
 }
@@ -20,7 +20,7 @@ export const ScoreBoardComponent: React.FC<ScoreBoardProps> = ({
   language,
 }) => {
   const isArabic = language === 'ar';
-  const isTeamGame = mode === '2v2' || (mode === 'online' && onlineSubMode === '2v2');
+  const isTeamGame = mode === '2v2' || mode === '3v3' || (mode === 'online' && (onlineSubMode === '2v2' || onlineSubMode === '3v3'));
 
   if (isTeamGame) {
     const team1Score = players.filter((p) => p.team === 1).reduce((sum, p) => sum + p.score, 0);

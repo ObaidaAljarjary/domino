@@ -40,7 +40,7 @@ export interface Player {
   profileId?: string;
 }
 
-export type GameMode = '1v1' | '3_ffa' | '2v2' | '4_ffa' | '5_ffa' | '6_ffa' | 'pass_play' | 'online';
+export type GameMode = '1v1' | '3_ffa' | '2v2' | '4_ffa' | '5_ffa' | '6_ffa' | '3v3' | 'pass_play' | 'online';
 export type Language = 'ar' | 'en';
 
 export interface GameBoard {
@@ -61,7 +61,7 @@ export interface ChatMessage {
 
 export interface GameState {
   mode: GameMode;
-  onlineSubMode?: '1v1' | '3_ffa' | '2v2' | '4_ffa' | '5_ffa' | '6_ffa';
+  onlineSubMode?: '1v1' | '3_ffa' | '2v2' | '4_ffa' | '5_ffa' | '6_ffa' | '3v3';
   targetScore: number;
   players: Player[];
   currentTurnIndex: number;

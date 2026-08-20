@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { GameMode, Language, PlayerProfile } from '../types/domino';
 import { Users, User, Globe, Trophy, Play, Copy, Check, UserPlus, Settings } from 'lucide-react';
 
-export type OnlineSubMode = '1v1' | '3_ffa' | '2v2' | '4_ffa' | '5_ffa' | '6_ffa';
+export type OnlineSubMode = '1v1' | '3_ffa' | '2v2' | '4_ffa' | '5_ffa' | '6_ffa' | '3v3';
 
 interface LobbyProps {
   profile: PlayerProfile;
@@ -63,6 +63,7 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
     { id: '4_ffa', labelAr: '4 لاعبين (كل لنفسه)', labelEn: '4 Players (FFA)', icon: '🤼' },
     { id: '5_ffa', labelAr: '5 لاعبين (كل لنفسه)', labelEn: '5 Players (FFA)', icon: '🌍' },
     { id: '6_ffa', labelAr: '6 لاعبين (كل لنفسه)', labelEn: '6 Players (FFA)', icon: '🔥' },
+    { id: '3v3', labelAr: '3 ضد 3 (فريقان)', labelEn: '3v3 Teams', icon: '🛡️' },
   ];
 
   return (
@@ -133,6 +134,11 @@ export const LobbyComponent: React.FC<LobbyProps> = ({
             <div className={`mode-card ${mode === '6_ffa' ? 'active' : ''}`} onClick={() => setMode('6_ffa')}>
               <Users size={22} color="var(--gold-accent)" />
               <strong style={{ fontSize: '0.85rem' }}>{isArabic ? '6 لاعبين' : '6 Players'}</strong>
+            </div>
+
+            <div className={`mode-card ${mode === '3v3' ? 'active' : ''}`} onClick={() => setMode('3v3')}>
+              <Users size={22} color="var(--gold-accent)" />
+              <strong style={{ fontSize: '0.85rem' }}>{isArabic ? '3 ضد 3 فرق' : '3v3 Teams'}</strong>
             </div>
 
             <div className={`mode-card ${mode === 'pass_play' ? 'active' : ''}`} onClick={() => setMode('pass_play')}>
