@@ -2,6 +2,7 @@ import { Peer, type DataConnection } from 'peerjs';
 
 export interface RoomMessage {
   id: string; // Unique message ID for deduplication
+  roomCode: string; // Room ID to filter global broadcast networks
   type:
     | 'JOIN_ROOM'
     | 'ASSIGN_SLOT'
@@ -54,6 +55,8 @@ export class MultiplayerRoomManager {
 
   private handleIncomingMessage(msg: any) {
     if (!msg || !msg.id) return;
+    if (msg.roomCode && this.roomCode && msg.roomCode !== this.roomCode) return; // Ignore global broadcast noise
+
     if (this.processedMsgIds.has(msg.id)) return; // Prevent duplicate execution
     this.processedMsgIds.add(msg.id);
 
@@ -86,7 +89,7 @@ export class MultiplayerRoomManager {
     }
 
     // 1. ALWAYS open WebSocket Relay in parallel for 100% connectivity guarantee across 4G/5G/WiFi
-    this.setupAlwaysOnRelay(this.roomCode);
+    this.setupAlwaysOnRelay();
 
     try {
       this.peer = new Peer(fullRoomId, {
@@ -161,7 +164,7 @@ export class MultiplayerRoomManager {
     setTimeout(safeOnConnected, 2000);
 
     // 1. ALWAYS open WebSocket Relay in parallel
-    this.setupAlwaysOnRelay(this.roomCode, safeOnConnected);
+    this.setupAlwaysOnRelay(safeOnConnected);
 
     try {
       this.peer = new Peer(this.myPeerId, {
@@ -205,10 +208,10 @@ export class MultiplayerRoomManager {
   }
 
   // Always-On WebSocket Relay Channel
-  private setupAlwaysOnRelay(code: string, onConnected?: () => void) {
+  private setupAlwaysOnRelay(onConnected?: () => void) {
     try {
-      const roomChannelName = code.toLowerCase();
-      const wsUrl = `wss://free.chatws.com/ws/iraqi-domino-${roomChannelName}`;
+      // Use a known reliable public websocket broadcast channel (Socketsbay Demo)
+      const wsUrl = `wss://socketsbay.com/wss/v2/1/demo/`;
       this.wsFallback = new WebSocket(wsUrl);
 
       this.wsFallback.onopen = () => {
@@ -235,6 +238,7 @@ export class MultiplayerRoomManager {
   public broadcastMessage(type: RoomMessage['type'], payload: any, senderName?: string) {
     const message: RoomMessage = {
       id: `${this.myPeerId}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      roomCode: this.roomCode,
       type,
       payload,
       senderId: this.myPeerId,
