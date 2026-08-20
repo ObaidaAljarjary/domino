@@ -149,8 +149,16 @@ export class MultiplayerRoomManager {
       this.onStatusCallback('جارِ الاتصال بغرفة صديقك...');
     }
 
+    let connectedCalled = false;
+    const safeOnConnected = () => {
+      if (!connectedCalled) {
+        connectedCalled = true;
+        onConnected();
+      }
+    };
+
     // 1. ALWAYS open WebSocket Relay in parallel
-    this.setupAlwaysOnRelay(this.roomCode);
+    this.setupAlwaysOnRelay(this.roomCode, safeOnConnected);
 
     try {
       this.peer = new Peer(this.myPeerId, {
@@ -168,7 +176,7 @@ export class MultiplayerRoomManager {
           if (this.onStatusCallback) {
             this.onStatusCallback('تم الاتصال بالغرفة! تجهز للعب...');
           }
-          onConnected();
+          safeOnConnected();
         });
 
         conn.on('data', (data: any) => {
@@ -177,21 +185,24 @@ export class MultiplayerRoomManager {
 
         conn.on('error', (err) => {
           console.warn('Peer Connection Error:', err);
-          onConnected();
+          safeOnConnected();
         });
       });
 
       this.peer.on('error', (err) => {
-        console.warn('PeerJS Join Warning:', err);
-        onConnected();
+        console.warn('PeerJS Guest Warning:', err);
+        if (this.onStatusCallback) {
+          this.onStatusCallback('تم الاتصال عبر السيرفر! تجهز للعب...');
+        }
+        safeOnConnected();
       });
     } catch {
-      onConnected();
+      safeOnConnected();
     }
   }
 
   // Always-On WebSocket Relay Channel
-  private setupAlwaysOnRelay(code: string) {
+  private setupAlwaysOnRelay(code: string, onConnected?: () => void) {
     try {
       const roomChannelName = code.toLowerCase();
       const wsUrl = `wss://free.chatws.com/ws/iraqi-domino-${roomChannelName}`;
@@ -201,6 +212,7 @@ export class MultiplayerRoomManager {
         if (this.onStatusCallback && !this.isHost) {
           this.onStatusCallback('متصل بالغرفة! جارِ تجهيز اللعبة...');
         }
+        if (onConnected) onConnected();
       };
 
       this.wsFallback.onmessage = (evt) => {
