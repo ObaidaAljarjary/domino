@@ -147,7 +147,7 @@ export const TableLayout: React.FC<TableLayoutProps> = ({
   return (
     <div className="table-layout">
       {hasTopRow && (
-        <div className="table-top-row" style={{ display: 'flex', justifyContent: 'center', gap: '20px', padding: '6px 16px', background: 'rgba(27, 15, 11, 0.6)', borderBottom: '2px solid rgba(109, 57, 37, 0.4)' }}>
+        <div className="table-top-row" style={{ display: 'flex', justifyContent: 'center', gap: '20px', padding: '6px 16px', background: 'rgba(30, 41, 59, 0.4)', borderBottom: '1px solid var(--border-color)' }}>
           {topLeftPlayer && (
             <div className={`table-seat seat-top ${isPlayerActive(topLeftPlayer) ? 'seat-active-turn' : ''}`} style={{ flex: 1, padding: 0, border: 'none', background: 'none' }}>
               {renderSeatContent(topLeftPlayer, 'topLeft')}

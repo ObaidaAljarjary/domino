@@ -3,18 +3,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Outfit:wght@400;600;700&display=swap');
 
 :root {
-  --wood-dark: #1b0f0b;
-  --wood-medium: #361b11;
-  --wood-light: #4e291b;
-  --wood-border: #6d3925;
-  --gold-accent: #e5b842;
-  --gold-glow: rgba(229, 184, 66, 0.5);
-  --tea-amber: #c85012;
-  --tea-dark: #7a2300;
-  --tile-bg: #fcfbf5;
-  --tile-shadow: rgba(0, 0, 0, 0.55);
-  --pip-color: #1a1a1a;
-  --brass-pin: #d4af37;
+  --bg-dark: #0f172a;      /* Slate 900 */
+  --bg-medium: #1e293b;    /* Slate 800 */
+  --bg-light: #334155;     /* Slate 700 */
+  --border-color: #475569; /* Slate 600 */
+  --accent-color: #3b82f6; /* Blue 500 */
+  --accent-glow: rgba(59, 130, 246, 0.4);
+  --text-main: #f8fafc;    /* Slate 50 */
+  --text-muted: #94a3b8;   /* Slate 400 */
+  --tile-bg: #ffffff;
+  --tile-shadow: rgba(0, 0, 0, 0.1);
+  --pip-color: #0f172a;
+  --pin-color: #cbd5e1;    /* Slate 300 */
+  
+  /* Aliases to map old theme vars to new minimal vars without breaking HTML logic */
+  --wood-dark: var(--bg-dark);
+  --wood-medium: var(--bg-medium);
+  --wood-light: var(--bg-light);
+  --wood-border: var(--border-color);
+  --gold-accent: var(--accent-color);
+  --gold-glow: var(--accent-glow);
+  --tea-amber: var(--accent-color);
+  --tea-dark: var(--bg-medium);
+  --brass-pin: var(--pin-color);
+
   --arabic-font: 'Cairo', 'Tajawal', sans-serif;
   --english-font: 'Outfit', sans-serif;
 }
@@ -48,29 +60,22 @@ html, body, #root {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: 
-    radial-gradient(circle at 50% 30%, rgba(229, 184, 66, 0.12), transparent 70%),
-    radial-gradient(circle at 50% 50%, var(--wood-medium) 0%, var(--wood-dark) 100%);
+  background: var(--bg-dark);
   position: relative;
   overflow: hidden;
 }
 
-/* Oriental Wood Table Frame - Centered and Full Screen */
+/* Sleek Minimal Table Frame - Centered and Full Screen */
 .chaikhana-table-container {
   width: calc(100vw - 24px);
   height: calc(100vh - 24px);
   max-width: 100vw;
   max-height: 100vh;
   margin: 12px;
-  border-radius: 24px;
-  border: 10px solid var(--wood-border);
-  box-shadow: 
-    inset 0 0 50px rgba(0, 0, 0, 0.85),
-    0 12px 35px rgba(0, 0, 0, 0.8);
-  background: 
-    radial-gradient(circle at 50% 50%, rgba(229, 184, 66, 0.05) 0%, transparent 60%),
-    repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 4px),
-    linear-gradient(135deg, #2c160e 0%, #1a0b06 100%);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  background: var(--bg-medium);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -78,18 +83,9 @@ html, body, #root {
   overflow: hidden;
 }
 
-/* Oriental Arabesque Gold Pattern Border Trim */
+/* Hide old gold pattern trim for minimal theme */
 .chaikhana-table-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border: 3px dashed rgba(229, 184, 66, 0.35);
-  border-radius: 14px;
-  pointer-events: none;
-  margin: 6px;
+  display: none;
 }
 
 /* Header Bar */
@@ -111,8 +107,7 @@ html, body, #root {
   gap: 12px;
   font-size: 1.4rem;
   font-weight: 900;
-  color: var(--gold-accent);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  color: var(--accent-color);
 }
 
 .header-actions {
@@ -122,9 +117,9 @@ html, body, #root {
 }
 
 .icon-btn {
-  background: rgba(78, 41, 27, 0.6);
-  border: 1px solid var(--gold-accent);
-  color: #fff;
+  background: var(--bg-light);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
   padding: 8px 14px;
   border-radius: 8px;
   cursor: pointer;
@@ -135,14 +130,11 @@ html, body, #root {
   font-weight: 600;
   font-size: 0.9rem;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .icon-btn:hover {
-  background: var(--gold-accent);
-  color: var(--wood-dark);
+  background: var(--border-color);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px var(--gold-glow);
 }
 
 /* Centered Board Area */
@@ -174,14 +166,7 @@ html, body, #root {
 
 /* Traditional Iraqi Arabesque Corner Ornaments */
 .iraqi-ornament-corner {
-  position: absolute;
-  width: 80px;
-  height: 80px;
-  pointer-events: none;
-  opacity: 0.35;
-  background-image: radial-gradient(circle, var(--gold-accent) 2px, transparent 2px);
-  background-size: 10px 10px;
-  border: 2px solid var(--gold-accent);
+  display: none;
 }
 
 .iraqi-ornament-corner.top-left {
@@ -220,20 +205,20 @@ html, body, #root {
 .empty-board-box {
   text-align: center;
   padding: 36px 48px;
-  background: rgba(27, 15, 11, 0.7);
+  background: rgba(30, 41, 59, 0.7);
   backdrop-filter: blur(8px);
-  border: 2px dashed var(--gold-accent);
-  border-radius: 24px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  border: 1px dashed var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   z-index: 5;
   transition: all 0.2s ease;
   margin: auto;
 }
 
 .board-area.drag-active .empty-board-box {
-  border-color: #4ef037;
-  box-shadow: 0 0 25px rgba(78, 240, 55, 0.6);
-  transform: scale(1.05);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 15px var(--accent-glow);
+  transform: scale(1.02);
 }
 
 .ornament-star {
@@ -260,22 +245,19 @@ html, body, #root {
   margin-top: 6px;
 }
 
-/* Handcrafted Ivory Domino Tile */
+/* Clean Minimal Domino Tile */
 .domino-tile {
   width: 44px;
   height: 88px;
-  background: linear-gradient(145deg, #ffffff 0%, #f4f0e6 100%);
+  background: var(--tile-bg);
   border-radius: 6px;
-  border: 1px solid #d4ceb8;
-  box-shadow: 
-    0 4px 10px var(--tile-shadow),
-    inset 0 1px 1px rgba(255, 255, 255, 0.9),
-    inset 0 -2px 3px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 6px var(--tile-shadow);
   display: flex;
   flex-direction: column;
   position: relative;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease;
   margin: 2px;
   flex-shrink: 0;
 }
@@ -296,57 +278,47 @@ html, body, #root {
 }
 
 .domino-tile.playable {
-  box-shadow: 
-    0 0 18px var(--gold-accent),
-    0 4px 12px var(--tile-shadow);
-  border-color: var(--gold-accent);
-  transform: translateY(-6px);
-  animation: pulseGlow 1.5s infinite alternate;
-}
-
-@keyframes pulseGlow {
-  0% { box-shadow: 0 0 8px var(--gold-accent); }
-  100% { box-shadow: 0 0 22px var(--gold-accent), 0 0 30px var(--gold-accent); }
+  border-color: var(--accent-color);
+  border-width: 2px;
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 .domino-tile:hover:not(.disabled) {
-  transform: translateY(-8px) scale(1.05);
+  transform: translateY(-4px);
   z-index: 20;
 }
 
 /* Center Divider Line & Brass Pin (زر النحاس) */
 .tile-divider-vertical {
   width: 100%;
-  height: 2px;
-  background: #c5bfa8;
+  height: 1px;
+  background: var(--border-color);
   position: absolute;
   top: 50%;
   left: 0;
   transform: translateY(-50%);
-  box-shadow: inset 0 1px 1px rgba(0,0,0,0.2);
 }
 
 .tile-divider-horizontal {
   height: 100%;
-  width: 2px;
-  background: #c5bfa8;
+  width: 1px;
+  background: var(--border-color);
   position: absolute;
   left: 50%;
   top: 0;
   transform: translateX(-50%);
-  box-shadow: inset 0 1px 1px rgba(0,0,0,0.2);
 }
 
 .brass-pin {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #fff 0%, var(--brass-pin) 70%, #997a15 100%);
+  background: var(--pin-color);
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   z-index: 2;
 }
 
@@ -363,11 +335,10 @@ html, body, #root {
 }
 
 .pip {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #444 0%, var(--pip-color) 70%);
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.8);
+  background: var(--pip-color);
 }
 
 /* Pip Grid Positioning */
@@ -394,9 +365,9 @@ html, body, #root {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: rgba(229, 184, 66, 0.25);
-  border: 2px dashed var(--gold-accent);
-  color: var(--gold-accent);
+  background: rgba(59, 130, 246, 0.15);
+  border: 2px dashed var(--accent-color);
+  color: var(--accent-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -408,15 +379,15 @@ html, body, #root {
 }
 
 .drop-zone-wrapper.drag-over .drop-target-btn {
-  background: var(--gold-accent);
-  color: var(--wood-dark);
+  background: var(--accent-color);
+  color: #fff;
   transform: scale(1.25);
-  box-shadow: 0 0 25px var(--gold-glow);
+  box-shadow: 0 0 25px var(--accent-glow);
 }
 
 .drop-target-btn:hover {
-  background: var(--gold-accent);
-  color: var(--wood-dark);
+  background: var(--accent-color);
+  color: #fff;
   transform: scale(1.15);
 }
 
@@ -425,17 +396,9 @@ html, body, #root {
   100% { transform: scale(1.08); }
 }
 
-/* Istikan Iraqi Tea Component */
+/* Istikan Iraqi Tea Component - Hidden for minimal theme */
 .istikan-container {
-  position: absolute;
-  bottom: 110px;
-  right: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  z-index: 15;
-  transition: transform 0.2s ease;
+  display: none;
 }
 
 .istikan-container:hover {
@@ -519,9 +482,8 @@ html, body, #root {
 
 /* Player Hands Bar */
 .bottom-hand-bar {
-  background: rgba(27, 15, 11, 0.95);
-  backdrop-filter: blur(10px);
-  border-top: 3px solid var(--wood-border);
+  background: var(--bg-dark);
+  border-top: 1px solid var(--border-color);
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -545,16 +507,16 @@ html, body, #root {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #fff;
+  color: var(--text-main);
   font-size: 1rem;
   font-weight: 700;
 }
 
 .turn-indicator-badge {
-  background: var(--gold-accent);
-  color: var(--wood-dark);
+  background: var(--accent-color);
+  color: #fff;
   padding: 4px 12px;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 800;
   animation: pulseBadge 1.2s infinite alternate;
@@ -562,7 +524,7 @@ html, body, #root {
 
 @keyframes pulseBadge {
   0% { transform: scale(1); }
-  100% { transform: scale(1.06); }
+  100% { transform: scale(1.02); }
 }
 
 .action-buttons-group {
@@ -571,40 +533,37 @@ html, body, #root {
 }
 
 .game-btn {
-  background: linear-gradient(180deg, var(--wood-light) 0%, var(--wood-medium) 100%);
-  border: 2px solid var(--gold-accent);
-  color: #fff;
+  background: var(--bg-light);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
   font-family: inherit;
   font-weight: 700;
   font-size: 1rem;
   padding: 8px 20px;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
   transition: all 0.2s ease;
 }
 
 .game-btn:hover:not(:disabled) {
-  background: var(--gold-accent);
-  color: var(--wood-dark);
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #fff;
   transform: translateY(-2px);
-  box-shadow: 0 6px 14px var(--gold-glow);
 }
 
 .game-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-  border-color: #666;
 }
 
 .game-btn.active {
-  background: var(--gold-accent);
-  color: var(--wood-dark);
-  box-shadow: 0 0 14px var(--gold-glow);
-  border-color: #ffd700;
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #fff;
 }
 
 /* Bot Speech Banner */
@@ -613,12 +572,11 @@ html, body, #root {
   top: 75px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.95);
-  color: #111;
+  background: var(--bg-light);
+  color: var(--text-main);
   padding: 8px 18px;
-  border-radius: 20px;
-  border: 2px solid var(--gold-accent);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
   font-weight: 700;
   font-size: 0.95rem;
   display: flex;
@@ -638,11 +596,12 @@ html, body, #root {
   position: absolute;
   top: 75px;
   left: 20px;
-  background: #fdf6e3;
-  color: #2b2b2b;
+  background: var(--bg-medium);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
   width: 220px;
   padding: 14px;
-  border-radius: 8px;
+  border-radius: 12px;
   border-left: 6px solid #b58900;
   box-shadow: 0 8px 20px rgba(0,0,0,0.6);
   font-family: inherit;
@@ -685,16 +644,16 @@ html, body, #root {
 }
 
 .lobby-card {
-  background: linear-gradient(135deg, var(--wood-medium) 0%, var(--wood-dark) 100%);
-  border: 4px solid var(--wood-border);
-  outline: 2px solid var(--gold-accent);
-  border-radius: 24px;
+  background: var(--bg-medium);
+  border: 1px solid var(--border-color);
+  outline: none;
+  border-radius: 16px;
   width: 95%;
   max-width: 580px;
   max-height: 88vh;
   overflow-y: auto;
   padding: 20px 24px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -705,12 +664,11 @@ html, body, #root {
 .lobby-title {
   font-size: 1.8rem;
   font-weight: 900;
-  color: var(--gold-accent);
-  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  color: var(--accent-color);
 }
 
 .lobby-subtitle {
-  color: #ccc;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
@@ -721,8 +679,8 @@ html, body, #root {
 }
 
 .mode-card {
-  background: rgba(78, 41, 27, 0.6);
-  border: 2px solid transparent;
+  background: var(--bg-light);
+  border: 1px solid transparent;
   border-radius: 12px;
   padding: 10px 12px;
   cursor: pointer;
@@ -734,24 +692,25 @@ html, body, #root {
 }
 
 .mode-card.active {
-  border-color: var(--gold-accent);
-  background: rgba(229, 184, 66, 0.15);
-  box-shadow: 0 0 15px var(--gold-glow);
+  border-color: var(--accent-color);
+  background: rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 15px var(--accent-glow);
 }
 
 .mode-card:hover {
   transform: translateY(-2px);
+  background: var(--border-color);
 }
 
 .input-field {
   width: 100%;
   padding: 10px 14px;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid var(--wood-border);
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  color: #fff;
+  color: var(--text-main);
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 1rem;
   outline: none;
 }
 
@@ -773,14 +732,14 @@ html, body, #root {
 }
 
 .round-end-card {
-  background: linear-gradient(180deg, #361b11 0%, #1b0f0b 100%);
-  border: 3px solid var(--gold-accent);
-  border-radius: 20px;
+  background: var(--bg-medium);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
   padding: 28px;
   width: 90%;
   max-width: 440px;
   text-align: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
 /* ===== TABLE LAYOUT WITH OPPONENT SEATS ===== */
@@ -879,8 +838,8 @@ html, body, #root {
   flex-direction: column;
   width: 100%;
   padding: 6px 16px;
-  background: rgba(27, 15, 11, 0.6);
-  border-bottom: 2px solid rgba(109, 57, 37, 0.4);
+  background: rgba(30, 41, 59, 0.4);
+  border-bottom: 1px solid var(--border-color);
 }
 
 /* Left seat */
@@ -889,8 +848,8 @@ html, body, #root {
   width: 90px;
   min-width: 90px;
   padding: 8px 6px;
-  background: rgba(27, 15, 11, 0.4);
-  border-right: 2px solid rgba(109, 57, 37, 0.3);
+  background: rgba(30, 41, 59, 0.2);
+  border-right: 1px solid var(--border-color);
 }
 
 /* Right seat */
@@ -899,14 +858,14 @@ html, body, #root {
   width: 90px;
   min-width: 90px;
   padding: 8px 6px;
-  background: rgba(27, 15, 11, 0.4);
-  border-left: 2px solid rgba(109, 57, 37, 0.3);
+  background: rgba(30, 41, 59, 0.2);
+  border-left: 1px solid var(--border-color);
 }
 
 /* Active turn glow */
 .seat-active-turn {
-  background: rgba(229, 184, 66, 0.12) !important;
-  box-shadow: inset 0 0 20px rgba(229, 184, 66, 0.2);
+  background: rgba(59, 130, 246, 0.1) !important;
+  box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.2);
 }
 
 .seat-active-turn .seat-name {
@@ -1018,9 +977,9 @@ html, body, #root {
   position: absolute;
   bottom: 20px;
   right: 20px;
-  background: var(--button-gradient);
-  color: #fff;
-  border: 1px solid var(--gold-accent);
+  background: var(--bg-light);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
   border-radius: 50%;
   width: 50px;
   height: 50px;
@@ -1028,13 +987,16 @@ html, body, #root {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   z-index: 100;
-  transition: transform 0.2s;
+  transition: transform 0.2s, background 0.2s;
 }
 
 .chat-toggle-btn:hover {
   transform: scale(1.1);
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #fff;
 }
 
 .chat-box-container {
@@ -1043,12 +1005,12 @@ html, body, #root {
   right: 20px;
   width: 320px;
   height: 400px;
-  background: rgba(43, 24, 16, 0.95);
-  border: 2px solid var(--gold-accent);
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
   z-index: 100;
   overflow: hidden;
   animation: slideUp 0.3s ease;
@@ -1064,14 +1026,14 @@ html, body, #root {
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  background: rgba(0, 0, 0, 0.3);
-  border-bottom: 1px solid rgba(229, 184, 66, 0.3);
+  background: var(--bg-medium);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .chat-box-header h3 {
   margin: 0;
   font-size: 1rem;
-  color: var(--gold-accent);
+  color: var(--accent-color);
 }
 
 .chat-box-messages {
@@ -1085,7 +1047,7 @@ html, body, #root {
 
 .chat-empty-state {
   text-align: center;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   margin: auto;
   font-style: italic;
 }
@@ -1106,7 +1068,7 @@ html, body, #root {
 
 .chat-sender {
   font-size: 0.75rem;
-  color: var(--gold-accent);
+  color: var(--accent-color);
   margin-bottom: 2px;
   opacity: 0.8;
 }
@@ -1115,23 +1077,23 @@ html, body, #root {
   padding: 8px 12px;
   border-radius: 12px;
   font-size: 0.9rem;
-  background: rgba(0, 0, 0, 0.4);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-light);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
   word-wrap: break-word;
 }
 
 .chat-message.mine .chat-bubble {
-  background: rgba(229, 184, 66, 0.2);
-  border-color: rgba(229, 184, 66, 0.4);
+  background: rgba(59, 130, 246, 0.2);
+  border-color: var(--accent-color);
 }
 
 .chat-box-input-area {
   display: flex;
   padding: 10px;
   gap: 8px;
-  background: rgba(0, 0, 0, 0.3);
-  border-top: 1px solid rgba(229, 184, 66, 0.3);
+  background: var(--bg-medium);
+  border-top: 1px solid var(--border-color);
   align-items: center;
 }
 
@@ -1143,18 +1105,18 @@ html, body, #root {
 
 .chat-input {
   flex: 1;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
   border-radius: 20px;
   padding: 8px 12px;
-  color: #fff;
+  color: var(--text-main);
   font-size: 0.9rem;
   outline: none;
   font-family: inherit;
 }
 
 .chat-input:focus {
-  border-color: var(--gold-accent);
+  border-color: var(--accent-color);
 }
 
 .emote-btn {
@@ -1163,11 +1125,11 @@ html, body, #root {
 
 .send-btn {
   padding: 8px;
-  color: var(--gold-accent);
+  color: var(--accent-color);
 }
 
 .send-btn:disabled {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-muted);
   cursor: not-allowed;
 }
 
@@ -1175,14 +1137,14 @@ html, body, #root {
   position: absolute;
   bottom: 45px;
   left: 0;
-  background: rgba(30, 16, 12, 0.95);
-  border: 1px solid var(--gold-accent);
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 8px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
   z-index: 101;
 }
 
